@@ -24,7 +24,7 @@ const SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'X-Robots-Tag': 'noindex, nofollow',
 };
-const SPA_ROUTE = /^\/(p\/[A-Za-z0-9_-]{16}(\/admin)?|tools(\/[a-z-]+)?|security|pushes|agents)$/;
+const SPA_ROUTE = /^\/(p\/[A-Za-z0-9_-]{16}(\/admin)?|tools(\/[a-z-]+)?|security|pushes|agents|faq)$/;
 
 class HttpError extends Error {
   constructor(status, message) { super(message); this.status = status; }

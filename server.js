@@ -311,7 +311,7 @@ const SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'X-Robots-Tag': 'noindex, nofollow',
 };
-const SPA_ROUTE = /^\/(p\/[A-Za-z0-9_-]{16}(\/admin)?|tools(\/[a-z-]+)?|security|pushes|agents)?$/;
+const SPA_ROUTE = /^\/(p\/[A-Za-z0-9_-]{16}(\/admin)?|tools(\/[a-z-]+)?|security|pushes|agents|faq)?$/;
 
 function serveStatic(req, res, url) {
   if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'Method not allowed');

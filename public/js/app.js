@@ -52,7 +52,7 @@ document.addEventListener('vd:push', (e) => { prefill = e.detail; navigate('/');
 // ---- app shell: tabs, theme, install, offline ----
 $('#tabs').innerHTML = [
   ['/', 'push', 'send', 'Share'], ['/agents', 'agents', 'bot', 'AI agents'], ['/tools', 'tools', 'tools', 'Toolkit'],
-  ['/pushes', 'pushes', 'folder', 'My secrets'], ['/security', 'security', 'shield', 'Security'],
+  ['/pushes', 'pushes', 'folder', 'My secrets'], ['/security', 'security', 'shield', 'Security'], ['/faq', 'faq', 'list', 'FAQ'],
 ].map(([href, nav, ic, label]) => `<a href="${href}" data-link data-nav="${nav}">${icon(ic)}<span>${label}</span></a>`).join('');
 const themeBtn = $('#theme-toggle');
 themeBtn.innerHTML = icon('moon');
@@ -81,6 +81,7 @@ function render() {
   else if (path === '/pushes') { nav = 'pushes'; pageMine(); }
   else if (path === '/security') { nav = 'security'; pageSecurity(); }
   else if (path === '/agents') { nav = 'agents'; pageAgents(); }
+  else if (path === '/faq') { nav = 'faq'; pageFaq(); }
   else app.innerHTML = notice('link', 'Page not found', 'That address does not exist.', '<a class="btn primary" href="/" data-link>Share a secret</a>');
   $$('#tabs [data-nav]').forEach((a) => {
     a.classList.toggle('on', a.dataset.nav === nav);
@@ -148,7 +149,11 @@ async function pagePush() {
         <p>Good — chat transcripts are stored and replayed. Give it a one‑time VaultDrop link instead.</p></div>
       <a class="btn" href="/agents" data-link>See how it works</a>
     </section>
-    <p class="hint center narrow"><a href="/security" data-link>Read exactly how the encryption works →</a></p>`;
+    <section class="card narrow">
+      <h2>Do you store my password?</h2>
+      <p><b>No.</b> Your password is scrambled on your own device before anything is sent. We receive only the scrambled version, we never receive the key that unscrambles it, and that scrambled copy is deleted as soon as the link expires.</p>
+      <div class="actions"><a class="btn" href="/faq" data-link>More questions &amp; answers</a><a class="btn ghost" href="/security" data-link>How the encryption works</a></div>
+    </section>`;
   const form = $('#push-form');
   let kind = 'text';
   let who = 'person';
@@ -514,6 +519,71 @@ node vd-get.mjs '${esc(o)}/p/…#…' --out .secret</pre></li>
         <li><b>Rotate or revoke when the task is done.</b> Once retrieved, the secret lives in the agent's workspace; VaultDrop protects the hand‑off, not what happens afterwards.</li>
       </ul>
       <div class="actions"><a class="btn primary" href="/" data-link data-agent>${icon('bot')} Create a link for an agent</a><a class="btn" href="/security" data-link>How the encryption works</a></div>
+    </section>`;
+}
+
+// ------------------------------------------------------------------ faq --
+const FAQ = [
+  ['Your password and us', [
+    ['Do you store my password?',
+      `<p><b>No.</b> We never receive your password in a form anyone can read, so there is nothing readable for us to store.</p>
+       <p>Before anything leaves your device, your browser scrambles (encrypts) the secret with a key it has just created. Only the scrambled result is sent to us. The key stays in the link you share and is never sent to our server.</p>
+       <p>What we hold, temporarily, is that scrambled copy. To us it is meaningless noise, and it is deleted as soon as the link runs out of views or time.</p>`],
+    ['So what exactly is on your server?',
+      `<ul><li>The encrypted (scrambled) secret, until it expires</li><li>The expiry settings you chose</li><li>An access log for the sender: time, IP address and browser of each open</li><li>One-way fingerprints used to check that a request comes from someone holding the link</li></ul>
+       <p>Not on our server: your password, the decryption key, your passphrase, file names, an account, an email address.</p>`],
+    ['How does the encrypt / decrypt part work, in plain words?',
+      `<p>Think of a lockbox. Your browser puts the secret in the box and locks it. We are handed the locked box to hold. The only key is inside the link you send to your recipient. When they open the link, their browser collects the locked box from us and unlocks it on their device.</p>
+       <p>We carry the box. We never hold the key. The technical version (AES-256-GCM, key in the link fragment) is on the <a href="/security" data-link>Security page</a>.</p>`],
+    ['Can you, your staff, or someone who breaks into your server read my secret?',
+      `<p>No. Reading it needs the key, and the key is never on our server. On top of that, the scrambled data is encrypted a second time while stored, so a stolen copy of the database is useless on its own.</p>`],
+    ['How can I check that for myself?',
+      `<p>Open your browser's developer tools, go to the Network tab, and create a secret. You will see the request that goes to us: it contains only scrambled data, and the part of the link after <code>#</code> never appears in any request. The code that does this is small and readable, and the whole project can be self-hosted.</p>`],
+  ]],
+  ['Using links', [
+    ['What happens when a link expires?',
+      `<p>The scrambled data is deleted from our live database straight away, and the link only shows "this secret is gone". Database recovery snapshots age out within 30 days and only ever contain data we cannot read.</p>`],
+    ['I lost the link. Can you recover the secret for me?',
+      `<p>No, and that is by design. The link contains the only key. Without it nobody can decrypt the secret, including us. Create a new one.</p>`],
+    ['Is it safe to send the link by email or chat?',
+      `<p>Much safer than sending the password itself: the link stops working after the views or time you set, and you can see whether it was opened. But anyone who gets the full link before it expires can open it. For sensitive things, use a single view and add a passphrase that you send through a different channel.</p>`],
+    ['What does the extra passphrase do?',
+      `<p>It adds a second lock. Someone who intercepts the link still cannot open it without the passphrase. Wrong guesses do not use up views, and repeated guessing is blocked.</p>`],
+    ['Will link previews in chat apps use up my views?',
+      `<p>No. Opening a link shows a confirmation step first, and nothing is released until a person (or agent) holding the full link asks for it.</p>`],
+    ['What are the limits?',
+      `<p>Text up to 64 KB, files up to 5 MB, 1 to 100 views, 1 to 90 days. No account needed.</p>`],
+  ]],
+  ['AI agents', [
+    ['My AI agent refused to take my password. Why, and how does this help?',
+      `<p>Chat transcripts are saved and re-read, so a careful agent will not accept a password typed into the conversation. Send a one-view VaultDrop link instead: the agent fetches the secret straight into its workspace, and the link left in the chat is dead from that moment. See <a href="/agents" data-link>the guide for AI agents</a>.</p>`],
+    ['Does the secret end up in the chat history?',
+      `<p>Not if the agent follows the suggested command, which writes the secret to a file without printing it. The chat contains only the link, and that link no longer opens anything.</p>`],
+  ]],
+  ['Privacy and the toolkit', [
+    ['Do you use cookies, accounts or trackers?',
+      `<p>No accounts, no cookies, no advertising or analytics scripts. The list under "My secrets" is kept on your own device and holds only management tokens, never the secret or its key.</p>`],
+    ['Do the toolkit tools send what I type to you?',
+      `<p>No. The generator, strength check, encryptor, 2FA codes, hashes, JWT inspector and encoder all run on your device and work offline. One exception, clearly marked: the breach check asks the public Have I Been Pwned service using only the first 5 characters of a fingerprint of the password, never the password.</p>`],
+    ['Can I install it as an app?',
+      `<p>Yes. On Android and desktop Chrome use "Install app"; on iPhone use Share, then "Add to Home Screen".</p>`],
+  ]],
+];
+function pageFaq() {
+  app.innerHTML = `
+    <section class="hero sub">
+      <p class="eyebrow">Questions &amp; answers</p>
+      <h1>Do you store my password? <span class="grad">No.</span></h1>
+      <p class="lede">Your secret is scrambled on your device before it is sent, and only the person holding the link can unscramble it. We hold a locked box for a short time. We never hold the key.</p>
+    </section>
+    ${FAQ.map(([group, items], g) => `
+      <section class="card narrow faq"><h2>${group}</h2>
+        ${items.map(([q, a], i) => `<details${g === 0 && i === 0 ? ' open' : ''}><summary>${q}</summary><div class="prose">${a}</div></details>`).join('')}
+      </section>`).join('')}
+    <section class="card narrow center">
+      <h2>Still unsure?</h2>
+      <p>The full technical explanation, including what we cannot promise, is on the Security page.</p>
+      <div class="actions"><a class="btn primary" href="/" data-link>Share a secret</a><a class="btn" href="/security" data-link>Security details</a></div>
     </section>`;
 }
 
