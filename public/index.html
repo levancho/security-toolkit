@@ -2,34 +2,40 @@
 <html lang="en">
 <head>
   <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex, nofollow">
-  <meta name="description" content="Share passwords and secrets through end-to-end encrypted, self-destructing links.">
+  <meta name="description" content="Share passwords with people and AI agents through end-to-end encrypted, self-destructing links.">
+  <meta name="theme-color" content="#060a13" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="VaultDrop">
   <title>VaultDrop — encrypted, self-destructing secrets</title>
+  <link rel="manifest" href="/manifest.webmanifest">
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
+  <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
   <link rel="stylesheet" href="/style.css">
   <script src="/js/theme.js"></script>
 </head>
 <body>
   <header class="top">
     <a class="brand" href="/" data-link>
-      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.6 5 13.2 12 15 7-1.8 12-7.4 12-15V7L16 2Z" fill="currentColor" opacity=".18"/><path d="M16 2 4 7v8c0 7.6 5 13.2 12 15 7-1.8 12-7.4 12-15V7L16 2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="14" r="3" fill="currentColor"/><path d="M16 16v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.600 5 13.200 12 15 7-1.800 12-7.400 12-15V7L16 2Z" fill="currentColor" opacity=".18"/><path d="M16 2 4 7v8c0 7.600 5 13.200 12 15 7-1.800 12-7.400 12-15V7L16 2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="14" r="3" fill="currentColor"/><path d="M16 16v6" stroke="currentColor" stroke-width="2.400" stroke-linecap="round"/></svg>
       <span>VaultDrop</span>
     </a>
-    <nav aria-label="Main">
-      <a href="/" data-link data-nav="push">Share</a>
-      <a href="/tools" data-link data-nav="tools">Toolkit</a>
-      <a href="/pushes" data-link data-nav="pushes">My secrets</a>
-      <a href="/security" data-link data-nav="security">Security</a>
-    </nav>
-    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle light/dark theme" title="Toggle theme">🌓</button>
+    <nav class="tabs" id="tabs" aria-label="Main"></nav>
+    <button id="install" class="icon-btn" type="button" hidden>Install app</button>
+    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle light/dark theme" title="Toggle theme"></button>
   </header>
+  <div id="offline" hidden>You're offline. The toolkit still works; sharing and opening secrets needs a connection.</div>
 
   <main id="app" tabindex="-1"></main>
 
   <footer class="foot">
-    <p><span class="lock">🔒</span> Encrypted in your browser with AES‑256‑GCM. We store only ciphertext we cannot read. <a href="/security" data-link>How it works</a></p>
+    <p>Encrypted in your browser with AES‑256‑GCM. We store only ciphertext we cannot read. <a href="/security" data-link>How it works</a></p>
   </footer>
   <div id="toast" role="status" aria-live="polite"></div>
 

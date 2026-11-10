@@ -293,12 +293,13 @@ async function api(req, res, url) {
 // ----------------------------------------------------------------- static --
 const MIME = {
   '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
-  '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8',
+  '.json': 'application/json; charset=utf-8', '.svg': 'image/svg+xml', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8', '.mjs': 'text/javascript; charset=utf-8',
+  '.png': 'image/png', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json',
 };
 const SECURITY_HEADERS = {
   'Content-Security-Policy': [
     "default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self' data: blob:",
-    "connect-src 'self' https://api.pwnedpasswords.com", "font-src 'self'", "manifest-src 'self'",
+    "connect-src 'self' https://api.pwnedpasswords.com", "font-src 'self'", "manifest-src 'self'", "worker-src 'self'",
     "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'",
   ].join('; '),
   'Referrer-Policy': 'no-referrer',
@@ -310,7 +311,7 @@ const SECURITY_HEADERS = {
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   'X-Robots-Tag': 'noindex, nofollow',
 };
-const SPA_ROUTE = /^\/(p\/[A-Za-z0-9_-]{16}(\/admin)?|tools(\/[a-z-]+)?|security|pushes)?$/;
+const SPA_ROUTE = /^\/(p\/[A-Za-z0-9_-]{16}(\/admin)?|tools(\/[a-z-]+)?|security|pushes|agents)?$/;
 
 function serveStatic(req, res, url) {
   if (req.method !== 'GET' && req.method !== 'HEAD') throw new HttpError(405, 'Method not allowed');

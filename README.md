@@ -24,6 +24,36 @@ docker build -t vaultdrop . && docker run -p 3000:3000 -v vaultdrop-data:/app/da
 **Production must be served over HTTPS** (put it behind Caddy, nginx or a load balancer and set
 `TRUST_PROXY=1`). Browsers only allow the Web Crypto API on HTTPS or localhost.
 
+## Giving a password to an AI agent
+
+AI agents are usually told not to accept credentials pasted into chat, because transcripts are
+stored and replayed. VaultDrop is built as the alternative:
+
+1. Create a link with the **An AI agent** preset (1 view, 24 hours).
+2. Paste the generated message into the chat. It contains the link and these commands:
+
+```bash
+curl -fsSO https://your-host/vd-get.mjs
+```
+
+```bash
+node vd-get.mjs '<link>' --out .secret
+```
+
+3. The agent's copy of the secret lands in a file (mode 600) and is never printed; the link is
+   erased on that first read, so what remains in the chat history opens nothing.
+
+`public/vd-get.mjs` is a single dependency-free Node 20+ file using the same derivation as the web
+app. Passphrase-protected links read `VD_PASSPHRASE`. Agents with a browser can open the link instead.
+
+## Installable app
+
+VaultDrop is a PWA: web manifest, icons, and a service worker (`public/sw.js`) that keeps the shell
+and the whole toolkit working offline. On phones it shows a bottom tab bar, respects safe-area
+insets, uses the native share sheet, and can be added to the home screen (Android/desktop Chrome:
+"Install app"; iOS Safari: Share → Add to Home Screen). The service worker is network-first and
+never caches API responses.
+
 ## Features
 
 - Share a password/text (up to 64 KB) or a file (default up to 5 MB)
@@ -78,6 +108,9 @@ server.js            HTTP server, API, storage, at-rest encryption, janitor
 public/js/crypto.js  client-side encryption (the part worth auditing first)
 public/js/app.js     pages: share, reveal, audit, my secrets, security
 public/js/tools.js   security toolkit
+public/vd-get.mjs    command-line retrieval for AI agents and scripts
+public/sw.js         service worker (offline shell, never caches the API)
 public/vendor/       qrcode-generator (MIT), EFF long word list (CC BY 3.0 US)
+public/fonts/        Inter, Space Grotesk, JetBrains Mono (SIL OFL 1.1)
 test/api.test.js     API tests
 ```

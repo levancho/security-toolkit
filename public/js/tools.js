@@ -1,5 +1,5 @@
 // VaultDrop security toolkit. Every tool runs entirely in the browser.
-import { $, $$, esc, toast, copyText, drawQr, fmtDate, fmtRelative } from './ui.js';
+import { $, $$, esc, toast, copyText, drawQr, fmtDate, fmtRelative, icon } from './ui.js';
 import { utf8, fromUtf8, toB64, fromB64, toB64u, fromB64u, toHex, randomBytes, randomInt } from './crypto.js';
 
 let wordlistPromise;
@@ -36,7 +36,7 @@ function generator(el) {
     </div>
     <div class="out-row">
       <output class="mono out big" id="g-out" aria-live="polite"></output>
-      <button type="button" class="btn ghost" id="g-new" title="Generate another">↻</button>
+      <button type="button" class="btn ghost" id="g-new" title="Generate another" aria-label="Generate another">${icon('refresh')}</button>
     </div>
     <div class="meter"><i id="g-bar"></i></div>
     <p class="hint" id="g-info"></p>
@@ -503,13 +503,13 @@ function encoder(el) {
 
 // ---------------------------------------------------------------- mount --
 export const TOOLS = [
-  { id: 'generator', icon: '🎲', title: 'Password generator', desc: 'Strong passwords, passphrases, API keys and tokens.', render: generator },
-  { id: 'strength', icon: '📊', title: 'Strength & breach check', desc: 'Estimate crack time and check known data breaches privately.', render: strength },
-  { id: 'encrypt', icon: '🔐', title: 'Text encryptor', desc: 'Encrypt or decrypt a message with a passphrase, fully offline.', render: cipher },
-  { id: 'totp', icon: '⏱', title: '2FA code generator', desc: 'Generate TOTP secrets, QR codes and live codes.', render: totpTool },
-  { id: 'hash', icon: '#️⃣', title: 'Hash & checksum', desc: 'SHA digests and HMAC for text or files; verify downloads.', render: hash },
-  { id: 'jwt', icon: '🪪', title: 'JWT inspector', desc: 'Decode tokens, spot problems, verify HMAC signatures.', render: jwt },
-  { id: 'encode', icon: '🔁', title: 'Encoder / decoder', desc: 'Base64, Base64URL, hex and URL encoding.', render: encoder },
+  { id: 'generator', icon: 'dice', title: 'Password generator', desc: 'Strong passwords, passphrases, API keys and tokens.', render: generator },
+  { id: 'strength', icon: 'chart', title: 'Strength & breach check', desc: 'Estimate crack time and check known data breaches privately.', render: strength },
+  { id: 'encrypt', icon: 'lock', title: 'Text encryptor', desc: 'Encrypt or decrypt a message with a passphrase, fully offline.', render: cipher },
+  { id: 'totp', icon: 'clock', title: '2FA code generator', desc: 'Generate TOTP secrets, QR codes and live codes.', render: totpTool },
+  { id: 'hash', icon: 'hash', title: 'Hash & checksum', desc: 'SHA digests and HMAC for text or files; verify downloads.', render: hash },
+  { id: 'jwt', icon: 'id', title: 'JWT inspector', desc: 'Decode tokens, spot problems, verify HMAC signatures.', render: jwt },
+  { id: 'encode', icon: 'swap', title: 'Encoder / decoder', desc: 'Base64, Base64URL, hex and URL encoding.', render: encoder },
 ];
 
 /** Mount the toolkit into `root`. Returns a cleanup function. */
@@ -517,11 +517,11 @@ export function mountTools(root, activeId, onSelect) {
   const tool = TOOLS.find((t) => t.id === activeId) || TOOLS[0];
   root.innerHTML = `
     <section class="page-head"><h1>Security toolkit</h1>
-      <p>Seven tools that run entirely in your browser. Nothing you type here is sent to our server.</p></section>
+      <p>Seven tools that run entirely on your device — they even work offline. Nothing you type here is sent to our server.</p></section>
     <div class="tools">
       <nav class="tool-nav" aria-label="Tools">${TOOLS.map((t) => `
         <a href="/tools/${t.id}" data-tool="${t.id}" class="${t === tool ? 'on' : ''}"${t === tool ? ' aria-current="page"' : ''}>
-          <span class="ico" aria-hidden="true">${t.icon}</span><span><b>${t.title}</b><small>${t.desc}</small></span></a>`).join('')}
+          <span class="ico">${icon(t.icon)}</span><span><b>${t.title}</b><small>${t.desc}</small></span></a>`).join('')}
       </nav>
       <section class="card tool-panel"><h2>${tool.title}</h2><div id="tool-body"></div></section>
     </div>`;
