@@ -538,7 +538,7 @@ const FAQ = [
     ['Can you, your staff, or someone who breaks into your server read my secret?',
       `<p>No. Reading it needs the key, and the key is never on our server. On top of that, the scrambled data is encrypted a second time while stored, so a stolen copy of the database is useless on its own.</p>`],
     ['How can I check that for myself?',
-      `<p>Open your browser's developer tools, go to the Network tab, and create a secret. You will see the request that goes to us: it contains only scrambled data, and the part of the link after <code>#</code> never appears in any request. The code that does this is small and readable, and the whole project can be self-hosted.</p>`],
+      `<p>Open your browser's developer tools, go to the Network tab, and create a secret. You will see the request that goes to us: it contains only scrambled data, and the part of the link after <code>#</code> never appears in any request. The code that does this is small, readable and open source: <a href="https://github.com/levancho/security-toolkit" target="_blank" rel="noopener">read it on GitHub</a>, or run your own copy.</p>`],
   ]],
   ['Using links', [
     ['What happens when a link expires?',
@@ -649,7 +649,7 @@ function pageSecurity() {
       <ul class="notes plain">
         <li><b>The link is the key.</b> Anyone who gets the full link before it expires can open it. Use a single view, and add a passphrase sent through a different channel for anything sensitive.</li>
         <li><b>Check the audit log.</b> If a secret was opened by someone unexpected, treat it as exposed and change the password.</li>
-        <li><b>Encryption runs in code served by this site.</b> As with any web app, you are trusting that this site serves honest code over HTTPS. VaultDrop is open and self‑hostable so that you or your organisation can run and inspect your own copy.</li>
+        <li><b>Encryption runs in code served by this site.</b> As with any web app, you are trusting that this site serves honest code over HTTPS. VaultDrop is <a href="https://github.com/levancho/security-toolkit" target="_blank" rel="noopener">open source on GitHub</a> and self‑hostable, so you or your organisation can inspect it and run your own copy.</li>
         <li><b>Rotate when you can.</b> A shared password is best treated as temporary: ask the recipient to change it after first use.</li>
       </ul>
       <div class="actions"><a class="btn primary" href="/" data-link>Share a secret securely</a><a class="btn" href="/agents" data-link>${icon('bot')} Using it with AI agents</a></div>
