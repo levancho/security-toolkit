@@ -199,11 +199,17 @@ function humanTime(seconds) {
 async function sha1Hex(text) {
   return toHex(new Uint8Array(await crypto.subtle.digest('SHA-1', utf8(text)))).toUpperCase();
 }
-/** Have I Been Pwned k-anonymity lookup: only the first 5 hex chars of the SHA-1 leave the browser. */
+/**
+ * Have I Been Pwned k-anonymity lookup: only the first 5 hex chars of the SHA-1 leave the browser.
+ * The request goes through our own /api/breach relay, so ad blockers and strict browsers don't break it
+ * and the breach service never sees the visitor's IP address.
+ */
 export async function breachCount(pw) {
   const hash = await sha1Hex(pw);
-  const res = await fetch(`https://api.pwnedpasswords.com/range/${hash.slice(0, 5)}`);
-  if (!res.ok) throw new Error(`Breach service returned ${res.status}`);
+  let res;
+  try { res = await fetch(`/api/breach/${hash.slice(0, 5)}`, { cache: 'no-store' }); }
+  catch { throw new Error(navigator.onLine === false ? 'you are offline' : 'no connection to the server'); }
+  if (!res.ok) throw new Error(res.status === 429 ? 'too many checks, try again in a few minutes' : `the breach service answered ${res.status}`);
   const suffix = hash.slice(5);
   for (const line of (await res.text()).split('\n')) {
     const [suf, count] = line.trim().split(':');
@@ -224,14 +230,17 @@ function strength(el) {
     <ul class="notes" id="s-notes"></ul>
     <div class="actions"><button type="button" class="btn primary" id="s-hibp" disabled>Check against known data breaches</button></div>
     <p id="s-breach" class="callout" hidden></p>
-    <p class="hint">Analysis happens locally. The breach check uses the Have I Been Pwned <em>k‑anonymity</em> API: only the first 5 characters of the password's SHA‑1 hash are sent, never the password.</p>`;
+    <p class="hint">Analysis happens on your device. The breach check uses the Have I Been Pwned <em>k‑anonymity</em> method: only the first 5 characters of a fingerprint (SHA‑1 hash) of the password are sent, relayed through our server. The password itself never leaves your device.</p>`;
   let words;
+  let checking = false;   // a breach lookup is in flight
+  let shownFor = null;    // the password the visible breach result belongs to
   loadWordlist().then((w) => { words = new Set(w); update(); });
   const update = () => {
     const pw = $('#s-pw', el).value;
     const r = estimateStrength(pw, words);
-    $('#s-hibp', el).disabled = !pw;
-    $('#s-breach', el).hidden = true;
+    $('#s-hibp', el).disabled = !pw || checking;
+    // Only clear the breach result when the password actually changed, not on every re-analysis.
+    if (pw !== shownFor) { $('#s-breach', el).hidden = true; shownFor = null; }
     $('#s-bar', el).style.width = pw ? `${Math.min(100, (r.bits / 100) * 100)}%` : '0';
     $('#s-bar', el).dataset.level = Math.max(1, r.score);
     $('#s-label', el).textContent = pw ? LABELS[r.score] : '—';
@@ -245,24 +254,37 @@ function strength(el) {
     $('#s-notes', el).innerHTML = r.notes.map((n) => `<li>${esc(n)}</li>`).join('');
   };
   $('#s-pw', el).addEventListener('input', update);
+  $('#s-pw', el).addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.value) $('#s-hibp', el).click(); });
   $('#s-show', el).addEventListener('click', (e) => {
     const i = $('#s-pw', el);
     i.type = i.type === 'password' ? 'text' : 'password';
     e.target.textContent = i.type === 'password' ? 'Show' : 'Hide';
   });
   $('#s-hibp', el).addEventListener('click', async () => {
+    const pw = $('#s-pw', el).value;
+    if (!pw || checking) return;
     const out = $('#s-breach', el);
-    out.hidden = false; out.className = 'callout'; out.textContent = 'Checking…';
+    const btn = $('#s-hibp', el);
+    checking = true; shownFor = pw;
+    btn.disabled = true; btn.textContent = 'Checking…';
+    out.hidden = false; out.className = 'callout'; out.textContent = 'Checking known breaches…';
+    let cls; let text;
     try {
-      const n = await breachCount($('#s-pw', el).value);
-      out.className = `callout ${n ? 'bad' : 'good'}`;
-      out.textContent = n
+      const n = await breachCount(pw);
+      cls = n ? 'bad' : 'good';
+      text = n
         ? `⚠ This password appears ${n.toLocaleString()} time${n === 1 ? '' : 's'} in known data breaches. Do not use it anywhere.`
         : '✓ Not found in any known breach. (That alone does not make it strong.)';
     } catch (e) {
-      out.className = 'callout bad';
-      out.textContent = `Could not reach the breach database: ${e.message}`;
+      cls = 'bad';
+      text = `Could not check right now: ${e.message}.`;
     }
+    checking = false;
+    btn.textContent = 'Check against known data breaches';
+    btn.disabled = !$('#s-pw', el).value;
+    if ($('#s-pw', el).value !== pw) return; // the password changed while we were checking: don't show a stale answer
+    out.hidden = false; out.className = `callout ${cls}`; out.textContent = text;
+    out.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   });
   update();
 }

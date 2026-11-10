@@ -91,7 +91,7 @@ recovery snapshots for up to 30 days; they contain only doubly-encrypted ciphert
 - "My secrets" dashboard (owner tokens kept in the creating browser's localStorage)
 - QR code for the link, light/dark theme, mobile layout
 - Toolkit (all client-side): password / passphrase / token generator, strength estimate with
-  Have I Been Pwned k-anonymity breach check, passphrase text encryptor, TOTP 2FA generator,
+  Have I Been Pwned k-anonymity breach check (relayed via `/api/breach`, only a 5-char hash prefix is sent), passphrase text encryptor, TOTP 2FA generator,
   hash & HMAC with checksum compare, JWT inspector, Base64/hex/URL encoder
 
 ## Security design

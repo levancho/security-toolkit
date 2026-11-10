@@ -568,7 +568,7 @@ const FAQ = [
     ['Do you use cookies, accounts or trackers?',
       `<p>No accounts, no cookies, no advertising or analytics scripts. The list under "My secrets" is kept on your own device and holds only management tokens, never the secret or its key.</p>`],
     ['Do the toolkit tools send what I type to you?',
-      `<p>No. The generator, strength check, encryptor, 2FA codes, hashes, JWT inspector and encoder all run on your device and work offline. One exception, clearly marked: the breach check asks the public Have I Been Pwned service using only the first 5 characters of a fingerprint of the password, never the password.</p>`],
+      `<p>No. The generator, strength check, encryptor, 2FA codes, hashes, JWT inspector and encoder all run on your device and work offline. One exception, clearly marked: the breach check asks the public Have I Been Pwned service, through our server, using only the first 5 characters of a fingerprint of the password. The password itself never leaves your device.</p>`],
     ['Can I install it as an app?',
       `<p>Yes. On Android and desktop Chrome use "Install app"; on iPhone use Share, then "Add to Home Screen".</p>`],
   ]],

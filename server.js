@@ -210,6 +210,20 @@ async function api(req, res, url) {
   if (parts[1] === 'config' && req.method === 'GET') {
     return send(200, { maxDays: LIMITS.maxDays, maxViews: LIMITS.maxViews, maxTextBytes: LIMITS.maxTextBytes, maxFileBytes: LIMITS.maxFileBytes });
   }
+  // Breach lookup relay (Have I Been Pwned k-anonymity). We only ever see the first 5 hex chars of a SHA-1.
+  if (parts[1] === 'breach' && parts.length === 3 && req.method === 'GET') {
+    if (!/^[0-9A-Fa-f]{5}$/.test(parts[2])) throw new HttpError(400, 'Prefix must be 5 hex characters');
+    if (limited(req, 'breach', 120, 10 * 60e3)) throw new HttpError(429, 'Too many requests');
+    let upstream;
+    try {
+      upstream = await fetch(`https://api.pwnedpasswords.com/range/${parts[2].toUpperCase()}`, {
+        headers: { 'Add-Padding': 'true', 'User-Agent': 'VaultDrop-breach-check' }, signal: AbortSignal.timeout(10e3),
+      });
+    } catch { throw new HttpError(502, 'Breach service unreachable'); }
+    if (!upstream.ok) throw new HttpError(502, 'Breach service unavailable');
+    res.writeHead(200, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+    return res.end(await upstream.text());
+  }
   if (parts[1] !== 'pushes') throw new HttpError(404, 'Not found');
 
   // Create
@@ -299,7 +313,7 @@ const MIME = {
 const SECURITY_HEADERS = {
   'Content-Security-Policy': [
     "default-src 'none'", "script-src 'self'", "style-src 'self'", "img-src 'self' data: blob:",
-    "connect-src 'self' https://api.pwnedpasswords.com", "font-src 'self'", "manifest-src 'self'", "worker-src 'self'",
+    "connect-src 'self'", "font-src 'self'", "manifest-src 'self'", "worker-src 'self'",
     "base-uri 'none'", "form-action 'none'", "frame-ancestors 'none'",
   ].join('; '),
   'Referrer-Policy': 'no-referrer',
