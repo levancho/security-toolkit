@@ -1,0 +1,15 @@
+{
+  "name": "vaultdrop",
+  "version": "1.0.0",
+  "description": "End-to-end encrypted, self-destructing secret sharing with a built-in security toolkit",
+  "private": true,
+  "license": "MIT",
+  "main": "server.js",
+  "engines": {
+    "node": ">=22.13"
+  },
+  "scripts": {
+    "start": "node --disable-warning=ExperimentalWarning server.js",
+    "test": "node --disable-warning=ExperimentalWarning --test test/api.test.js"
+  }
+}
