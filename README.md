@@ -54,6 +54,33 @@ insets, uses the native share sheet, and can be added to the home screen (Androi
 "Install app"; iOS Safari: Share → Add to Home Screen). The service worker is network-first and
 never caches API responses.
 
+## Deploy to Cloudflare
+
+`cloudflare/` holds a Workers port of the server (same API, same crypto) backed by D1, with
+`public/` served as static assets. Live at https://security.l3v.ai.
+
+```bash
+cd cloudflare && npx wrangler d1 create security-toolkit
+```
+
+Put the returned `database_id` and your hostname in `wrangler.jsonc`, then:
+
+```bash
+npx wrangler d1 execute security-toolkit --remote --file schema.sql
+```
+
+```bash
+npx wrangler deploy
+```
+
+```bash
+openssl rand -base64 32 | npx wrangler secret put VAULTDROP_MASTER_KEY
+```
+
+Differences from the Node server: ciphertext is stored as base64 chunks (D1 caps values at 2 MB),
+rate limits live in a D1 table, and an hourly cron trigger does the clean-up. D1 keeps point-in-time
+recovery snapshots for up to 30 days; they contain only doubly-encrypted ciphertext.
+
 ## Features
 
 - Share a password/text (up to 64 KB) or a file (default up to 5 MB)

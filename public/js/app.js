@@ -308,7 +308,7 @@ async function pageView(id) {
     return;
   }
   if (meta.status === 'expired') {
-    app.innerHTML = notice('timer', 'This secret is gone', `${GONE[meta.endedWhy] || 'It expired.'} The encrypted data was permanently erased from our server and cannot be recovered by anyone — including us.`,
+    app.innerHTML = notice('timer', 'This secret is gone', `${GONE[meta.endedWhy] || 'It expired.'} The encrypted data was erased from our server. We never had the key, so nobody — including us — could ever read it.`,
       '<a class="btn primary" href="/" data-link>Share a secret of your own</a>');
     return;
   }
@@ -534,7 +534,7 @@ function pageSecurity() {
         <li><b>Only the encrypted result is sent to us.</b><span>Our server receives scrambled data. Without the key, it is indistinguishable from random noise.</span></li>
         <li><b>The key goes into the link, after the <code>#</code>.</b><span>Browsers never send that part of an address to a server. It travels only from you to your recipient.</span></li>
         <li><b>The recipient decrypts it locally.</b><span>Their browser (or the agent's command‑line tool) fetches the encrypted data and unlocks it with the key from the link.</span></li>
-        <li><b>Then it is erased.</b><span>When the view limit or time limit is reached — or someone presses Destroy — the encrypted data is deleted and overwritten in our database.</span></li>
+        <li><b>Then it is erased.</b><span>When the view limit or time limit is reached — or someone presses Destroy — the encrypted data is deleted from our database.</span></li>
       </ol>
       <figure class="diagram" aria-label="Diagram: the key stays between sender and recipient; the server only holds ciphertext">
         <div class="node">You<small>secret + key</small></div>
@@ -555,10 +555,10 @@ function pageSecurity() {
         <li>Your password or file in readable form</li><li>The decryption key</li><li>Your passphrase</li>
         <li>File names or the length of short secrets</li><li>Accounts, emails, cookies or trackers</li></ul></section>
       <section class="card prose"><h3>After a secret expires</h3><ul class="ticks">
-        <li>The encrypted data is erased immediately and its storage overwritten</li>
+        <li>The encrypted data is deleted from the live database immediately</li>
         <li>The link shows only “this secret is gone”</li>
         <li>The access log is kept for a short period for the sender, then deleted too</li>
-        <li>Nobody — including us — can bring it back</li></ul></section>
+        <li>Database recovery snapshots age out within 30 days — and only ever hold ciphertext we cannot read</li></ul></section>
     </div>
 
     <section class="card prose">

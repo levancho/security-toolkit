@@ -1,0 +1,13 @@
+{
+  "$schema": "https://unpkg.com/wrangler/config-schema.json",
+  "name": "security-toolkit",
+  "main": "worker.js",
+  "compatibility_date": "2025-09-01",
+  "compatibility_flags": ["nodejs_compat"],
+  "workers_dev": false,
+  "routes": [{ "pattern": "security.l3v.ai", "custom_domain": true }],
+  "assets": { "directory": "../public", "binding": "ASSETS", "run_worker_first": true, "not_found_handling": "none" },
+  "d1_databases": [{ "binding": "DB", "database_name": "security-toolkit", "database_id": "376adaab-cda7-4ed4-932e-900499bcc331" }],
+  "triggers": { "crons": ["17 * * * *"] },
+  "observability": { "enabled": true }
+}
