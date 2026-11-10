@@ -404,8 +404,6 @@ td.ua { white-space: normal; min-width: 220px; color: var(--muted); font-size: .
 .net-link b { display: block; font-size: .88rem; }
 .net-link small { display: block; color: var(--muted); font-size: .76rem; }
 .net-arrow { margin-left: auto; color: var(--muted); }
-.webrank-badge { display: flex; justify-content: center; min-height: 0; }
-.webrank-badge:empty { display: none; }
 @media (max-width: 820px) { .icon-btn.gh { display: none; } .net-toggle { display: none; } }
 @media (max-width: 520px) {
   .network nav { grid-template-columns: 1fr 1fr; }
