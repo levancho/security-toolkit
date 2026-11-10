@@ -42,10 +42,14 @@
         <a class="btn sm" href="https://github.com/levancho/security-toolkit" target="_blank" rel="noopener" aria-label="Source code on GitHub (opens in a new tab)"><svg class="i fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg> Open source on GitHub</a>
         <a class="btn sm coffee" href="https://ko-fi.com/l3vcoffe" target="_blank" rel="noopener" aria-label="Buy me a coffee on Ko-fi (opens in a new tab)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9ZM17 10h1.500a2.500 2.500 0 0 1 0 5H17M8 3v2.500M12 3v2.500"/></svg> Buy me a coffee</a>
         <a class="btn sm ghost" href="https://l3v.ai/" target="_blank" rel="noopener">Built by L3V</a>
+        <button class="btn sm" id="network-open" type="button" aria-haspopup="dialog">More from L3V</button>
       </div>
-      <details class="network" open>
-        <summary><span><small>Independent apps. Connected.</small><b>More from L3V</b></span><span class="net-toggle">Explore the network</span></summary>
-        <nav aria-label="L3V applications">
+    </div>
+  </footer>
+  <dialog id="network" class="network" aria-labelledby="network-title">
+    <header><span><small>Independent apps. Connected.</small><b id="network-title">More from L3V</b></span>
+      <button class="icon-btn" id="network-close" type="button" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
+    <nav aria-label="L3V applications">
           <a class="net-link" href="https://l3v.ai/" target="_blank" rel="noopener"><span class="net-mark" aria-hidden="true">L3V</span><span><b>L3V</b><small>The living canvas</small></span><span class="net-arrow" aria-hidden="true">↗</span></a>
           <a class="net-link" href="https://fontlab.ge/" target="_blank" rel="noopener"><span class="net-mark" aria-hidden="true">ა</span><span><b>FontLab</b><small>Georgian typography</small></span><span class="net-arrow" aria-hidden="true">↗</span></a>
           <a class="net-link" href="https://unboxit.ai/" target="_blank" rel="noopener"><span class="net-mark" aria-hidden="true">AI</span><span><b>Unboxit</b><small>Understand AI by playing</small></span><span class="net-arrow" aria-hidden="true">↗</span></a>
@@ -57,9 +61,7 @@
           <a class="net-link" href="https://prompts.l3v.ai/" target="_blank" rel="noopener"><span class="net-mark" aria-hidden="true">P_</span><span><b>Prompt Studio</b><small>Shape the prompt</small></span><span class="net-arrow" aria-hidden="true">↗</span></a>
           <a class="net-link" href="https://cinema.l3v.ai/" target="_blank" rel="noopener"><span class="net-mark" aria-hidden="true">C_</span><span><b>Cinema Studio</b><small>Explore AI filmmaking</small></span><span class="net-arrow" aria-hidden="true">↗</span></a>
         </nav>
-      </details>
-    </div>
-  </footer>
+  </dialog>
   <div id="toast" role="status" aria-live="polite"></div>
 
   <noscript><p class="noscript">VaultDrop encrypts secrets in your browser, so it needs JavaScript enabled.</p></noscript>

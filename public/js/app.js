@@ -66,6 +66,10 @@ let installEvent;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; $('#install').hidden = false; });
 $('#install').addEventListener('click', async () => { if (installEvent) { installEvent.prompt(); await installEvent.userChoice; installEvent = null; $('#install').hidden = true; } });
 window.addEventListener('appinstalled', () => { $('#install').hidden = true; });
+const network = $('#network');
+$('#network-open').addEventListener('click', () => network.showModal());
+$('#network-close').addEventListener('click', () => network.close());
+network.addEventListener('click', (e) => { if (e.target === network) network.close(); }); // click on the backdrop
 const syncOnline = () => { $('#offline').hidden = navigator.onLine; };
 window.addEventListener('online', syncOnline); window.addEventListener('offline', syncOnline); syncOnline();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
