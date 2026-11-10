@@ -81,6 +81,21 @@ Differences from the Node server: ciphertext is stored as base64 chunks (D1 caps
 rate limits live in a D1 table, and an hourly cron trigger does the clean-up. D1 keeps point-in-time
 recovery snapshots for up to 30 days; they contain only doubly-encrypted ciphertext.
 
+## UI: built on Colibri Kit
+
+The interface is built with [Colibri Kit](https://colibri-kit.io) (MIT), vendored under `public/colibri/`
+so the strict Content-Security-Policy still allows only same-origin code:
+
+- **Colibri CSS** supplies the reset, design tokens, buttons, cards, fields, badges, callouts and layout.
+- **Colibri UI** supplies the behaviour: tooltips, dialog, accordions (FAQ), segmented controls, switches,
+  checkboxes, password show/hide, theme switch and toasts. `core/auto.js` wires up every `data-ui` element;
+  the app dispatches `ui:refresh` after each page render.
+- `public/app.css` is the only app stylesheet: it sets the brand hue (`--c-hue`) and fonts, and lays out
+  what is specific to this app. Vendor files are never edited.
+
+To upgrade, copy `packages/colibri-css/dist/{colibri.css,colibri-ui-bridge.css}`, `themes/colibri.css` and
+`src/core/*.js` from a newer Colibri Kit checkout over `public/colibri/` and update `public/colibri/README.txt`.
+
 ## Features
 
 - Share a password/text (up to 64 KB) or a file (default up to 5 MB)
@@ -137,6 +152,8 @@ public/js/app.js     pages: share, reveal, audit, my secrets, security
 public/js/tools.js   security toolkit
 public/vd-get.mjs    command-line retrieval for AI agents and scripts
 public/sw.js         service worker (offline shell, never caches the API)
+public/app.css       app styles on top of Colibri Kit
+public/colibri/      Colibri Kit (MIT), vendored: CSS, UI theme, bridge, core controllers
 public/vendor/       qrcode-generator (MIT), EFF long word list (CC BY 3.0 US)
 public/fonts/        Inter, Space Grotesk, JetBrains Mono (SIL OFL 1.1)
 test/api.test.js     API tests

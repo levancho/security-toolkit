@@ -1,0 +1,261 @@
+/*! Colibri CSS — modern, layered, token-first. MIT */
+/* ---- 00-layers.css ---- */
+/* Colibri CSS — layer order. Anything you write unlayered beats all of these, no !important needed. */
+@layer colibri.reset, colibri.tokens, colibri.base, colibri.layout, colibri.components, colibri.utilities, colibri.ui, colibri.packs, colibri.bridge, colibri.looks, colibri.motion;
+
+/* ---- 10-reset.css ---- */
+@layer colibri.reset {
+  *, *::before, *::after { box-sizing: border-box; }
+  * { margin: 0; }
+  html { -webkit-text-size-adjust: 100%; text-size-adjust: 100%; interpolate-size: allow-keywords; hanging-punctuation: first last; }
+  body { min-block-size: 100svh; line-height: var(--c-leading, 1.6); -webkit-font-smoothing: antialiased; }
+  img, picture, video, canvas, svg { display: block; max-inline-size: 100%; block-size: auto; }
+  input, button, textarea, select { font: inherit; color: inherit; letter-spacing: inherit; }
+  textarea { field-sizing: content; min-block-size: 3lh; resize: vertical; }
+  p, li, figcaption { text-wrap: pretty; overflow-wrap: break-word; }
+  h1, h2, h3, h4, h5, h6 { text-wrap: balance; overflow-wrap: break-word; }
+  :target { scroll-margin-block: 5ex; }
+  [hidden]:not([hidden="until-found"]) { display: none !important; }
+  table { border-collapse: collapse; }
+  dialog, [popover] { color: inherit; }
+  /* Preserve native dialog invariants when layout primitives set display. */
+  dialog { margin: auto; }
+  dialog:not([open]) { display: none !important; }
+}
+
+/* ---- 20-tokens.css ---- */
+/* Design tokens. Override any of them on :root, on [data-theme], or on any element (they cascade). */
+@layer colibri.tokens {
+  :root {
+    color-scheme: light dark;
+    /* brand — change --c-hue / --c-chroma and the whole palette follows */
+    --c-hue: 255; --c-chroma: 0.16;
+
+    /* type — fluid between 360px and 1280px viewports */
+    --c-font: ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    --c-font-mono: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
+    --c-text-xs: clamp(0.72rem, 0.7rem + 0.1vw, 0.78rem);
+    --c-text-sm: clamp(0.84rem, 0.82rem + 0.1vw, 0.9rem);
+    --c-text-md: clamp(0.95rem, 0.92rem + 0.15vw, 1.05rem);
+    --c-text-lg: clamp(1.15rem, 1.05rem + 0.45vw, 1.4rem);
+    --c-text-xl: clamp(1.4rem, 1.2rem + 0.9vw, 2rem);
+    --c-text-2xl: clamp(1.8rem, 1.4rem + 1.8vw, 3rem);
+    --c-text-3xl: clamp(2.2rem, 1.6rem + 3vw, 4.2rem);
+    --c-leading: 1.6; --c-leading-tight: 1.2;
+
+    /* space — fluid scale */
+    --c-space-3xs: clamp(0.125rem, 0.1rem + 0.1vw, 0.25rem);
+    --c-space-2xs: clamp(0.25rem, 0.22rem + 0.15vw, 0.375rem);
+    --c-space-xs: clamp(0.5rem, 0.45rem + 0.2vw, 0.625rem);
+    --c-space-s:  clamp(0.75rem, 0.68rem + 0.3vw, 1rem);
+    --c-space-m:  clamp(1rem, 0.9rem + 0.5vw, 1.5rem);
+    --c-space-l:  clamp(1.5rem, 1.3rem + 1vw, 2.25rem);
+    --c-space-xl: clamp(2rem, 1.6rem + 2vw, 3.5rem);
+    --c-space-2xl: clamp(3rem, 2.2rem + 4vw, 6rem);
+
+    /* shape & depth */
+    --c-radius-s: 6px; --c-radius: 10px; --c-radius-l: 16px; --c-radius-full: 999px;
+    --c-shadow-color: light-dark(oklch(30% 0.03 var(--c-hue) / 0.12), oklch(0% 0 0 / 0.5));
+    --c-shadow-s: 0 1px 2px var(--c-shadow-color);
+    --c-shadow:   0 1px 2px var(--c-shadow-color), 0 4px 14px -4px var(--c-shadow-color);
+    --c-shadow-l: 0 2px 4px var(--c-shadow-color), 0 18px 40px -12px var(--c-shadow-color);
+
+    /* motion */
+    --c-ease: cubic-bezier(0.2, 0, 0, 1);
+    --c-ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    --c-ease-spring: linear(0, 0.35 8%, 0.82 20%, 1.04 32%, 1.08 40%, 1.02 55%, 0.99 70%, 1);
+    --c-dur-fast: 120ms; --c-dur: 200ms; --c-dur-slow: 400ms;
+
+    /* layout */
+    --c-measure: 68ch; --c-content: 72rem; --c-ring: 2px solid var(--c-accent);
+  }
+  /* Recompute derived colours at explicit theme boundaries. Inherited custom
+     properties are already resolved; changing only a child hue cannot rebind them. */
+  :root, :where([data-colibri-theme], [data-theme]) {
+    --c-brand: oklch(50% var(--c-chroma) var(--c-hue));
+    --c-brand-fg: light-dark(oklch(99% 0.01 var(--c-hue)), oklch(18% 0.02 var(--c-hue)));
+
+    /* semantic colours; light-dark() picks per colour scheme */
+    --c-bg:        light-dark(oklch(99.5% 0.003 var(--c-hue)), oklch(17% 0.01 var(--c-hue)));
+    --c-surface:   light-dark(oklch(100% 0 0),                 oklch(21% 0.012 var(--c-hue)));
+    --c-sunken:    light-dark(oklch(96.5% 0.006 var(--c-hue)), oklch(14% 0.01 var(--c-hue)));
+    --c-fg:        light-dark(oklch(22% 0.02 var(--c-hue)),    oklch(95% 0.01 var(--c-hue)));
+    --c-muted:     light-dark(oklch(50% 0.02 var(--c-hue)),    oklch(72% 0.015 var(--c-hue)));
+    --c-line:      light-dark(oklch(91% 0.008 var(--c-hue)),   oklch(30% 0.012 var(--c-hue)));
+    --c-accent:    light-dark(var(--c-brand), oklch(72% var(--c-chroma) var(--c-hue)));
+    --c-accent-soft: color-mix(in oklch, var(--c-accent) 14%, transparent);
+    --c-ok:   light-dark(oklch(49% 0.15 150), oklch(75% 0.15 150));
+    --c-warn: light-dark(oklch(49% 0.16 75),  oklch(82% 0.15 80));
+    --c-bad:  light-dark(oklch(50% 0.2 25),   oklch(72% 0.18 25));
+
+  }
+  /* explicit theme switch beats the OS setting */
+  [data-theme="light"] { color-scheme: light; }
+  [data-theme="dark"]  { color-scheme: dark; }
+  @media (prefers-reduced-motion: reduce) {
+    :root { --c-dur-fast: 0ms; --c-dur: 0ms; --c-dur-slow: 0ms; --c-ease-spring: linear; }
+  }
+  @media (prefers-contrast: more) { :root { --c-line: var(--c-muted); } }
+}
+
+/* ---- 30-base.css ---- */
+@layer colibri.base {
+  html { background: var(--c-bg); color: var(--c-fg); font-family: var(--c-font); font-size: 100%; scrollbar-color: var(--c-line) transparent; accent-color: var(--c-accent); }
+  @media (prefers-reduced-motion: no-preference) { html:focus-within { scroll-behavior: smooth; } }
+  body { font-size: var(--c-text-md); }
+  ::selection { background: color-mix(in oklch, var(--c-accent) 28%, transparent); color: inherit; }
+  :focus-visible { outline: var(--c-ring); outline-offset: 2px; }
+  :focus:not(:focus-visible) { outline: none; }
+
+  h1, h2, h3, h4 { line-height: var(--c-leading-tight); letter-spacing: -0.015em; font-weight: 700; }
+  h1 { font-size: var(--c-text-3xl); } h2 { font-size: var(--c-text-2xl); } h3 { font-size: var(--c-text-xl); } h4 { font-size: var(--c-text-lg); }
+  small { font-size: var(--c-text-sm); }
+  a { color: var(--c-accent); text-underline-offset: 0.2em; text-decoration-thickness: 1px;
+      &:hover { text-decoration-thickness: 2px; } }
+  code, kbd, samp, pre { font-family: var(--c-font-mono); font-size: 0.9em; }
+  :not(pre) > code { padding: 0.1em 0.35em; border-radius: var(--c-radius-s); background: var(--c-sunken); }
+  kbd { padding: 0.1em 0.4em; border: 1px solid var(--c-line); border-block-end-width: 2px; border-radius: var(--c-radius-s); }
+  pre { overflow: auto; padding: var(--c-space-s); border-radius: var(--c-radius); background: var(--c-sunken); }
+  hr { border: 0; border-block-start: 1px solid var(--c-line); margin-block: var(--c-space-l); }
+  mark { background: color-mix(in oklch, var(--c-warn) 35%, transparent); color: inherit; border-radius: 3px; }
+  blockquote { padding-inline-start: var(--c-space-s); border-inline-start: 3px solid var(--c-line); color: var(--c-muted); }
+
+  /* forms baseline */
+  :where(input:not([type=checkbox],[type=radio],[type=range],[type=color]), select, textarea) {
+    inline-size: 100%; min-block-size: 2.5rem; padding: 0.45em 0.75em; border: 1px solid var(--c-line); border-radius: var(--c-radius-s);
+    background: var(--c-surface); transition: border-color var(--c-dur-fast) var(--c-ease), box-shadow var(--c-dur-fast) var(--c-ease);
+    &::placeholder { color: var(--c-muted); opacity: 1; }
+    &:focus-visible { outline: none; border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--c-accent-soft); }
+    &:user-invalid { border-color: var(--c-bad); }
+    &:disabled { opacity: 0.55; cursor: not-allowed; }
+  }
+  :where(input[type=checkbox], input[type=radio]) { inline-size: 1.05em; block-size: 1.05em; }
+  label { font-size: var(--c-text-sm); font-weight: 500; }
+  fieldset { border: 1px solid var(--c-line); border-radius: var(--c-radius); padding: var(--c-space-s); }
+  :where(button, [type=submit], [type=button], [type=reset]) { cursor: pointer; }
+  :where(table) { inline-size: 100%; font-size: var(--c-text-sm);
+    & :where(th, td) { padding: 0.55em 0.75em; border-block-end: 1px solid var(--c-line); text-align: start; }
+    & th { font-weight: 600; } }
+
+  @media (forced-colors: active) {
+    :where(input, select, textarea):focus-visible { outline: 2px solid Highlight; outline-offset: 2px; }
+  }
+
+  /* scrollbars (WebKit; others use scrollbar-color above) */
+  ::-webkit-scrollbar { inline-size: 10px; block-size: 10px; }
+  ::-webkit-scrollbar-thumb { background: var(--c-line); border-radius: 99px; border: 2px solid var(--c-bg); }
+}
+
+/* ---- 40-layout.css ---- */
+/* Layout primitives — a handful, configured with custom properties instead of hundreds of classes. */
+@layer colibri.layout {
+  /* .stack: vertical rhythm.  --gap */
+  .stack { display: flex; flex-direction: column; gap: var(--gap, var(--c-space-s)); }
+  /* .cluster: wrapping row of things (buttons, tags).  --gap, --align, --justify */
+  .cluster { display: flex; flex-wrap: wrap; gap: var(--gap, var(--c-space-xs)); align-items: var(--align, center); justify-content: var(--justify, flex-start); }
+  /* .grid: auto-fitting responsive grid, no breakpoints.  --min, --gap */
+  .grid { display: grid; gap: var(--gap, var(--c-space-m)); grid-template-columns: repeat(auto-fill, minmax(min(var(--min, 16rem), 100%), 1fr)); }
+  /* .split: sidebar + main that wraps when there is no room.  --side, --gap */
+  .split { display: flex; flex-wrap: wrap; gap: var(--gap, var(--c-space-m));
+    & > :first-child { flex: 1 1 var(--side, 16rem); }
+    & > :last-child { flex: 999 1 0; min-inline-size: 55%; } }
+  /* .center: centred readable column.  --max */
+  .center { box-sizing: content-box; max-inline-size: var(--max, var(--c-content)); margin-inline: auto; padding-inline: var(--c-space-m); }
+  /* .bleed: a full-width child inside .center */
+  .bleed { inline-size: 100vw; margin-inline: calc(50% - 50vw); }
+  /* .switcher: row that flips to a column under --at */
+  .switcher { display: flex; flex-wrap: wrap; gap: var(--gap, var(--c-space-m));
+    & > * { flex-grow: 1; flex-basis: calc((var(--at, 36rem) - 100%) * 999); } }
+  /* .cover: vertically centred hero area */
+  .cover { display: grid; min-block-size: var(--min-h, 60svh); place-items: center; padding: var(--c-space-l); }
+  /* .frame: aspect-ratio box.  --ratio */
+  .frame { aspect-ratio: var(--ratio, 16 / 9); overflow: hidden; & > :is(img, video) { inline-size: 100%; block-size: 100%; object-fit: cover; } }
+  /* .reel: horizontal scroll-snap strip */
+  .reel { display: flex; gap: var(--gap, var(--c-space-s)); overflow-x: auto; scroll-snap-type: x mandatory; overscroll-behavior-inline: contain;
+    & > * { flex: 0 0 var(--item, 80%); scroll-snap-align: start; } }
+  /* .container: makes an element a size container so children respond to IT, not the viewport */
+  .container { container-type: inline-size; }
+  /* .prose: readable flow for markdown/HTML you don't control */
+  .prose { max-inline-size: var(--c-measure);
+    & > * + * { margin-block-start: var(--flow, 1.1em); }
+    & :is(h2, h3) { margin-block-start: 1.8em; }
+    & :is(h2, h3, h4) + * { margin-block-start: 0.5em; }
+    & :is(ul, ol) { padding-inline-start: 1.4em; }
+    & li + li { margin-block-start: 0.3em; }
+    & img { border-radius: var(--c-radius); } }
+  /* Token knobs as attributes (same idea as data-variant; no utility classes):
+     <div class="stack" data-gap="l">  ·  <div class="grid" data-min="12rem"> uses style="--min:12rem" */
+  :where(.stack, .cluster, .grid, .split, .switcher, .reel) {
+    &[data-gap="3xs"] { --gap: var(--c-space-3xs); }
+    &[data-gap="2xs"] { --gap: var(--c-space-2xs); }
+    &[data-gap="xs"] { --gap: var(--c-space-xs); }
+    &[data-gap="s"] { --gap: var(--c-space-s); }
+    &[data-gap="m"] { --gap: var(--c-space-m); }
+    &[data-gap="l"] { --gap: var(--c-space-l); }
+    &[data-gap="xl"] { --gap: var(--c-space-xl); }
+    &[data-gap="2xl"] { --gap: var(--c-space-2xl); }
+    &[data-gap="0"] { --gap: 0; } }
+  :where(.cluster)[data-justify="between"] { --justify: space-between; }
+  :where(.cluster)[data-justify="end"] { --justify: flex-end; }
+  :where(.cluster)[data-justify="center"] { --justify: center; }
+}
+
+/* ---- 50-components.css ---- */
+/* A small set of opt-in primitives. Variants are data attributes, not class soup. */
+@layer colibri.components {
+  .btn { display: inline-flex; align-items: center; justify-content: center; gap: 0.5em; min-block-size: 2.5rem; padding-inline: 1em;
+    border: 1px solid transparent; border-radius: var(--c-radius-s); font-weight: 500; font-size: var(--c-text-sm); text-decoration: none; cursor: pointer;
+    background: var(--c-accent); color: var(--c-brand-fg);
+    transition: background-color var(--c-dur-fast) var(--c-ease), transform var(--c-dur-fast) var(--c-ease), box-shadow var(--c-dur-fast) var(--c-ease);
+    &:hover { background: color-mix(in oklch, var(--c-accent) 88%, black); }
+    &:active { transform: scale(0.97); }
+    &:disabled, &[aria-disabled=true] { opacity: 0.5; pointer-events: none; }
+    &[data-variant=soft] { background: var(--c-accent-soft); color: var(--c-accent); }
+    &[data-variant=outline] { background: transparent; color: var(--c-fg); border-color: var(--c-line); &:hover { background: var(--c-sunken); } }
+    &[data-variant=ghost] { background: transparent; color: var(--c-fg); &:hover { background: var(--c-sunken); } }
+    &[data-variant=danger] { background: var(--c-bad); }
+    &[data-size=s] { min-block-size: 2rem; padding-inline: 0.75em; }
+    &[data-size=l] { min-block-size: 3rem; padding-inline: 1.4em; font-size: var(--c-text-md); } }
+
+  .card { container-type: inline-size; padding: var(--c-space-m); border: 1px solid var(--c-line); border-radius: var(--c-radius-l); background: var(--c-surface); box-shadow: var(--c-shadow-s);
+    transition: box-shadow var(--c-dur) var(--c-ease), border-color var(--c-dur) var(--c-ease);
+    /* :has() — a card containing a checked checkbox looks selected; one with a link inside lifts on hover */
+    &:has(:checked) { border-color: var(--c-accent); box-shadow: 0 0 0 3px var(--c-accent-soft); }
+    &:has(a:hover, button:hover) { box-shadow: var(--c-shadow); } }
+
+  /* A dialog card stays within the viewport; native dialog supplies modality. */
+  dialog.card { inline-size: min(32rem, calc(100% - 2rem)); max-block-size: calc(100% - 2rem); overflow: auto; }
+
+  .badge { display: inline-flex; inline-size: fit-content; align-items: center; gap: 0.3em; padding: 0.15em 0.6em; border-radius: var(--c-radius-full); font-size: var(--c-text-xs); font-weight: 600;
+    background: var(--tone-soft, var(--c-sunken)); color: var(--tone, var(--c-fg));
+    &[data-tone=accent] { --tone: var(--c-accent); --tone-soft: var(--c-accent-soft); }
+    &[data-tone=ok] { --tone: var(--c-ok); --tone-soft: color-mix(in oklch, var(--c-ok) 15%, transparent); }
+    &[data-tone=warn] { --tone: var(--c-warn); --tone-soft: color-mix(in oklch, var(--c-warn) 18%, transparent); }
+    &[data-tone=bad] { --tone: var(--c-bad); --tone-soft: color-mix(in oklch, var(--c-bad) 15%, transparent); } }
+
+  .field { display: grid; gap: var(--c-space-3xs);
+    & .hint { font-size: var(--c-text-xs); color: var(--c-muted); }
+    /* :has() — the field's label and hint turn red when its input is invalid after the user touched it */
+    &:has(:user-invalid) :is(label, .hint) { color: var(--c-bad); }
+    &:has(:required) label::after { content: " *"; color: var(--c-bad); } }
+
+  .callout { padding: var(--c-space-s) var(--c-space-m); border-inline-start: 4px solid var(--tone, var(--c-accent)); border-radius: var(--c-radius-s); background: color-mix(in oklch, var(--tone, var(--c-accent)) 9%, var(--c-surface));
+    &[data-tone=warn] { --tone: var(--c-warn); } &[data-tone=bad] { --tone: var(--c-bad); } &[data-tone=ok] { --tone: var(--c-ok); } }
+
+  /* motion primitive: elements fade/slide in when they appear (honours reduced motion via tokens) */
+  .enter { animation: c-enter var(--c-dur-slow) var(--c-ease-out) both; animation-delay: calc(var(--i, 0) * 60ms); }
+  @keyframes c-enter { from { opacity: 0; translate: 0 0.6rem; } }
+  @media (prefers-reduced-motion: reduce) { .enter { animation: none; } }
+  /* touch: 44px targets on coarse pointers */
+  @media (pointer: coarse) { .btn, .btn[data-size] { min-block-size: 2.75rem !important; min-inline-size: 2.75rem; } :is(input:not([type=checkbox], [type=radio], [type=range]), select, textarea) { min-block-size: 2.75rem; }
+    :where(nav) a, summary, [role=tab] { display: inline-flex; align-items: center; min-block-size: 2.75rem; } :is(input[type=checkbox], input[type=radio]) { min-inline-size: 1.5rem; min-block-size: 1.5rem; } }
+}
+
+/* ---- 60-utilities.css ---- */
+/* Deliberately tiny. If you need more than this, write CSS. */
+@layer colibri.utilities {
+  .visually-hidden:not(:focus-within, :active) { position: absolute !important; inline-size: 1px; block-size: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .muted { color: var(--c-muted); }
+  .flow > * + * { margin-block-start: var(--flow, 1em); }
+  .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}

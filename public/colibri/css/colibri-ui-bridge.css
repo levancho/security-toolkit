@@ -1,0 +1,22 @@
+/*! Colibri CSS — modern, layered, token-first. MIT */
+/* ---- 70-colibri-ui-bridge.css ---- */
+@layer colibri.reset, colibri.tokens, colibri.base, colibri.layout, colibri.components, colibri.utilities, colibri.ui, colibri.packs, colibri.bridge, colibri.looks, colibri.motion;
+/* Map CSS design tokens to UI tokens. App CSS can override either namespace. */
+@layer colibri.bridge {
+/* Preserve CSS system mode when the UI theme is also loaded. */
+:root { color-scheme: light dark; }
+[data-theme="light"] { color-scheme: light; }
+[data-theme="dark"] { color-scheme: dark; }
+:root, [data-theme], [data-colibri-theme] {
+  --ui-background: var(--c-bg); --ui-foreground: var(--c-fg);
+  --ui-card: var(--c-surface); --ui-popover: var(--c-surface);
+  --ui-muted: var(--c-sunken); --ui-muted-foreground: var(--c-muted);
+  --ui-border: var(--c-line); --ui-input: var(--c-line);
+  --ui-primary: var(--c-accent); --ui-primary-foreground: var(--c-brand-fg);
+  --ui-accent: var(--c-sunken); --ui-accent-foreground: var(--c-fg);
+  --ui-ring: var(--c-accent); --ui-destructive: var(--c-bad); --ui-success: var(--c-ok); --ui-warning: var(--c-warn);
+  --ui-radius: var(--c-radius); --ui-radius-sm: var(--c-radius-s); --ui-radius-lg: var(--c-radius-l);
+  --ui-shadow-sm: var(--c-shadow-s); --ui-shadow: var(--c-shadow);
+  --ui-font: var(--c-font); --ui-font-mono: var(--c-font-mono);
+}
+}

@@ -6,8 +6,8 @@
   <meta name="referrer" content="no-referrer">
   <meta name="robots" content="noindex, nofollow">
   <meta name="description" content="Share passwords with people and AI agents through end-to-end encrypted, self-destructing links.">
-  <meta name="theme-color" content="#060a13" media="(prefers-color-scheme: dark)">
-  <meta name="theme-color" content="#f4f6fb" media="(prefers-color-scheme: light)">
+  <meta name="theme-color" content="#0b1215" media="(prefers-color-scheme: dark)">
+  <meta name="theme-color" content="#f6f8f8" media="(prefers-color-scheme: light)">
   <meta name="mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -17,40 +17,47 @@
   <link rel="icon" href="/favicon.svg" type="image/svg+xml">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
   <link rel="preload" href="/fonts/space-grotesk-latin-wght-normal.woff2" as="font" type="font/woff2" crossorigin>
-  <link rel="stylesheet" href="/style.css">
+  <!-- Colibri Kit: CSS, UI theme, bridge, then the app's own styles -->
+  <link rel="stylesheet" href="/colibri/css/colibri.css">
+  <link rel="stylesheet" href="/colibri/themes/colibri.css">
+  <link rel="stylesheet" href="/colibri/css/colibri-ui-bridge.css">
+  <link rel="stylesheet" href="/app.css">
   <script src="/js/theme.js"></script>
+  <script type="module" src="/colibri/core/auto.js"></script>
 </head>
-<body>
+<body class="ui-root">
   <header class="top">
     <a class="brand" href="/" data-link>
-      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.600 5 13.200 12 15 7-1.800 12-7.400 12-15V7L16 2Z" fill="currentColor" opacity=".18"/><path d="M16 2 4 7v8c0 7.600 5 13.200 12 15 7-1.800 12-7.400 12-15V7L16 2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="14" r="3" fill="currentColor"/><path d="M16 16v6" stroke="currentColor" stroke-width="2.400" stroke-linecap="round"/></svg>
+      <svg viewBox="0 0 32 32" aria-hidden="true"><path d="M16 2 4 7v8c0 7.6 5 13.2 12 15 7-1.8 12-7.4 12-15V7L16 2Z" fill="currentColor" opacity=".18"/><path d="M16 2 4 7v8c0 7.6 5 13.2 12 15 7-1.8 12-7.4 12-15V7L16 2Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><circle cx="16" cy="14" r="3" fill="currentColor"/><path d="M16 16v6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
       <span>VaultDrop</span>
     </a>
     <nav class="tabs" id="tabs" aria-label="Main"></nav>
-    <a class="icon-btn coffee-top" href="https://ko-fi.com/l3vcoffe" target="_blank" rel="noopener" title="Buy me a coffee" aria-label="Buy me a coffee on Ko-fi (opens in a new tab)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9ZM17 10h1.500a2.500 2.500 0 0 1 0 5H17M8 3v2.500M12 3v2.500"/></svg></a>
-    <a class="icon-btn gh" href="https://github.com/levancho/security-toolkit" target="_blank" rel="noopener" aria-label="Source code on GitHub (opens in a new tab)" title="Open source on GitHub"><svg class="i fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg></a>
-    <button id="install" class="icon-btn" type="button" hidden>Install app</button>
-    <button id="theme-toggle" class="icon-btn" type="button" aria-label="Toggle light/dark theme" title="Toggle theme"></button>
+    <div class="cluster top-actions">
+      <span data-ui="tooltip" data-side="bottom"><a class="btn icon coffee" data-variant="outline" data-ui-part="trigger" href="https://ko-fi.com/l3vcoffe" target="_blank" rel="noopener" aria-label="Buy me a coffee on Ko-fi (opens in a new tab)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9ZM17 10h1.5a2.5 2.5 0 0 1 0 5H17M8 3v2.5M12 3v2.5"/></svg></a><span data-ui-part="content" role="tooltip">Buy me a coffee: if this tool helped, leave a small tip on Ko‑fi</span></span>
+      <span data-ui="tooltip" data-side="bottom"><a class="btn icon gh" data-variant="outline" data-ui-part="trigger" href="https://github.com/levancho/security-toolkit" target="_blank" rel="noopener" aria-label="Source code on GitHub (opens in a new tab)"><svg class="i fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg></a><span data-ui-part="content" role="tooltip">Open source: read the code on GitHub</span></span>
+      <span data-ui="tooltip" data-side="bottom"><button class="btn icon" data-variant="outline" data-ui="theme-switch" data-storage-key="vd-theme" data-ui-part="trigger" type="button" aria-label="Switch theme"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/></svg></button><span data-ui-part="content" role="tooltip">Switch theme: light, dark or match my device</span></span>
+      <button id="install" class="btn" data-variant="soft" data-size="s" type="button" hidden>Install app</button>
+    </div>
   </header>
-  <div id="offline" hidden>You're offline. The toolkit still works; sharing and opening secrets needs a connection.</div>
+  <div id="offline" class="callout" data-tone="warn" hidden>You're offline. The toolkit still works; sharing and opening secrets needs a connection.</div>
 
   <main id="app" tabindex="-1"></main>
 
   <footer class="foot">
-    <div class="foot-inner">
-      <p class="foot-claim">Encrypted in your browser with AES‑256‑GCM. We store only ciphertext we cannot read. <a href="/security" data-link>How it works</a> · <a href="/faq" data-link>FAQ</a></p>
-      <div class="foot-links">
-        <a class="btn sm" href="https://github.com/levancho/security-toolkit" target="_blank" rel="noopener" aria-label="Source code on GitHub (opens in a new tab)"><svg class="i fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg> Open source on GitHub</a>
-        <a class="btn sm coffee" href="https://ko-fi.com/l3vcoffe" target="_blank" rel="noopener" aria-label="Buy me a coffee on Ko-fi (opens in a new tab)"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9ZM17 10h1.500a2.500 2.500 0 0 1 0 5H17M8 3v2.500M12 3v2.500"/></svg> Buy me a coffee</a>
-        <a class="btn sm ghost" href="https://l3v.ai/" target="_blank" rel="noopener">Built by L3V</a>
-        <button class="btn sm" id="network-open" type="button" aria-haspopup="dialog">More from L3V</button>
-      </div>
-    </div>
-  </footer>
-  <dialog id="network" class="network" aria-labelledby="network-title">
-    <header><span><small>Independent apps. Connected.</small><b id="network-title">More from L3V</b></span>
-      <button class="icon-btn" id="network-close" type="button" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button></header>
-    <nav aria-label="L3V applications">
+    <div class="foot-inner stack" data-gap="s">
+      <p class="foot-claim muted">Encrypted in your browser with AES‑256‑GCM. We store only ciphertext we cannot read. <a href="/security" data-link>How it works</a> · <a href="/faq" data-link>FAQ</a></p>
+      <div class="cluster foot-links">
+        <span data-ui="tooltip"><a class="btn" data-variant="outline" data-size="s" data-ui-part="trigger" href="https://github.com/levancho/security-toolkit" target="_blank" rel="noopener"><svg class="i fill" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2a10 10 0 0 0-3.16 19.49c.5.09.68-.22.68-.48v-1.7c-2.78.6-3.37-1.34-3.37-1.34-.46-1.16-1.11-1.47-1.11-1.47-.91-.62.07-.61.07-.61 1 .07 1.53 1.03 1.53 1.03.9 1.52 2.34 1.08 2.91.83.09-.65.35-1.09.63-1.34-2.22-.25-4.56-1.11-4.56-4.94 0-1.09.39-1.98 1.03-2.68-.1-.25-.45-1.27.1-2.64 0 0 .84-.27 2.75 1.02a9.6 9.6 0 0 1 5 0c1.91-1.29 2.75-1.02 2.75-1.02.55 1.37.2 2.39.1 2.64.64.7 1.03 1.59 1.03 2.68 0 3.84-2.34 4.68-4.57 4.93.36.31.68.92.68 1.85v2.75c0 .27.18.58.69.48A10 10 0 0 0 12 2Z"/></svg> Open source on GitHub</a><span data-ui-part="content" role="tooltip">Read, audit or self-host the code</span></span>
+        <span data-ui="tooltip"><a class="btn coffee" data-variant="outline" data-size="s" data-ui-part="trigger" href="https://ko-fi.com/l3vcoffe" target="_blank" rel="noopener"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h13v5a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V9ZM17 10h1.5a2.5 2.5 0 0 1 0 5H17M8 3v2.5M12 3v2.5"/></svg> Buy me a coffee</a><span data-ui-part="content" role="tooltip">This tool is free. If it helped, you can leave a small tip on Ko‑fi</span></span>
+        <span data-ui="tooltip"><a class="btn" data-variant="ghost" data-size="s" data-ui-part="trigger" href="https://l3v.ai/" target="_blank" rel="noopener">Built by L3V</a><span data-ui-part="content" role="tooltip">The studio behind this tool</span></span>
+        <div data-ui="dialog" id="network">
+          <button class="btn" data-variant="outline" data-size="s" data-ui-part="trigger" type="button">More from L3V</button>
+          <dialog data-ui-part="content" class="card stack network" data-gap="m">
+            <header class="cluster">
+              <div><small>Independent apps. Connected.</small><h2 data-ui-part="title">More from L3V</h2></div>
+              <button class="btn icon" data-variant="ghost" data-ui-part="close" type="button" aria-label="Close"><svg class="i" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6 6 18"/></svg></button>
+            </header>
+                <nav aria-label="L3V applications">
           <a class="net-link" href="https://l3v.ai/" target="_blank" rel="noopener"><span class="net-mark" aria-hidden="true">L3V</span><span><b>L3V</b><small>The living canvas</small></span><span class="net-arrow" aria-hidden="true">↗</span></a>
           <a class="net-link" href="https://fontlab.ge/" target="_blank" rel="noopener"><span class="net-mark" aria-hidden="true">ა</span><span><b>FontLab</b><small>Georgian typography</small></span><span class="net-arrow" aria-hidden="true">↗</span></a>
           <a class="net-link" href="https://unboxit.ai/" target="_blank" rel="noopener"><span class="net-mark" aria-hidden="true">AI</span><span><b>Unboxit</b><small>Understand AI by playing</small></span><span class="net-arrow" aria-hidden="true">↗</span></a>
@@ -63,8 +70,12 @@
           <a class="net-link" href="https://prompts.l3v.ai/" target="_blank" rel="noopener"><span class="net-mark" aria-hidden="true">P_</span><span><b>Prompt Studio</b><small>Shape the prompt</small></span><span class="net-arrow" aria-hidden="true">↗</span></a>
           <a class="net-link" href="https://cinema.l3v.ai/" target="_blank" rel="noopener"><span class="net-mark" aria-hidden="true">C_</span><span><b>Cinema Studio</b><small>Explore AI filmmaking</small></span><span class="net-arrow" aria-hidden="true">↗</span></a>
         </nav>
-  </dialog>
-  <div id="toast" role="status" aria-live="polite"></div>
+          </dialog>
+        </div>
+      </div>
+    </div>
+  </footer>
+  <ol data-ui="toaster" data-max="2" aria-label="Notifications"></ol>
 
   <noscript><p class="noscript">VaultDrop encrypts secrets in your browser, so it needs JavaScript enabled.</p></noscript>
   <script src="/vendor/qrcode.js"></script>

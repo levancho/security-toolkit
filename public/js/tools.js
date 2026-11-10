@@ -1,5 +1,5 @@
 // VaultDrop security toolkit. Every tool runs entirely in the browser.
-import { $, $$, esc, toast, copyText, drawQr, fmtDate, fmtRelative, icon } from './ui.js';
+import { $, $$, esc, toast, copyText, drawQr, fmtDate, fmtRelative, icon, tip, setCallout } from './ui.js';
 import { utf8, fromUtf8, toB64, fromB64, toB64u, fromB64u, toHex, randomBytes, randomInt } from './crypto.js';
 
 let wordlistPromise;
@@ -29,33 +29,33 @@ export function generatePassword(len, opts) {
 
 function generator(el) {
   el.innerHTML = `
-    <div class="seg" role="tablist">
-      <button type="button" class="on" data-mode="password">Password</button>
-      <button type="button" data-mode="passphrase">Passphrase</button>
-      <button type="button" data-mode="token">Token / key</button>
+    <div data-ui="segmented-control" data-default-value="password" id="g-mode" aria-label="What to generate">
+      <button type="button" data-ui-part="item" data-value="password" data-mode="password">Password</button>
+      <button type="button" data-ui-part="item" data-value="passphrase" data-mode="passphrase">Passphrase</button>
+      <button type="button" data-ui-part="item" data-value="token" data-mode="token">Token / key</button>
     </div>
     <div class="out-row">
       <output class="mono out big" id="g-out" aria-live="polite"></output>
-      <button type="button" class="btn ghost" id="g-new" title="Generate another" aria-label="Generate another">${icon('refresh')}</button>
+      ${tip(`<button type="button" class="btn" data-variant="outline" id="g-new" data-ui-part="trigger" aria-label="Generate another">${icon('refresh')}</button>`, 'Generate another')}
     </div>
     <div class="meter"><i id="g-bar"></i></div>
     <p class="hint" id="g-info"></p>
     <div data-pane="password">
       <label class="range"><span>Length <b id="g-len-v">20</b></span><input type="range" id="g-len" min="8" max="128" value="20"></label>
       <div class="checks">
-        <label><input type="checkbox" id="g-lower" checked> a–z</label>
-        <label><input type="checkbox" id="g-upper" checked> A–Z</label>
-        <label><input type="checkbox" id="g-digits" checked> 0–9</label>
-        <label><input type="checkbox" id="g-symbols" checked> Symbols</label>
-        <label><input type="checkbox" id="g-amb"> Avoid look‑alikes (l, 1, O, 0)</label>
+        <label><input type="checkbox" data-ui="checkbox" id="g-lower" checked> a–z</label>
+        <label><input type="checkbox" data-ui="checkbox" id="g-upper" checked> A–Z</label>
+        <label><input type="checkbox" data-ui="checkbox" id="g-digits" checked> 0–9</label>
+        <label><input type="checkbox" data-ui="checkbox" id="g-symbols" checked> Symbols</label>
+        <label><input type="checkbox" data-ui="checkbox" id="g-amb"> Avoid look‑alikes (l, 1, O, 0)</label>
       </div>
     </div>
     <div data-pane="passphrase" hidden>
       <label class="range"><span>Words <b id="g-words-v">5</b></span><input type="range" id="g-words" min="3" max="10" value="5"></label>
       <div class="checks">
         <label>Separator <select id="g-sep"><option value="-">hyphen</option><option value=" ">space</option><option value=".">dot</option><option value="_">underscore</option></select></label>
-        <label><input type="checkbox" id="g-cap"> Capitalize</label>
-        <label><input type="checkbox" id="g-num"> Add a number</label>
+        <label><input type="checkbox" data-ui="checkbox" id="g-cap"> Capitalize</label>
+        <label><input type="checkbox" data-ui="checkbox" id="g-num"> Add a number</label>
       </div>
       <p class="hint">Words come from the EFF long word list (7,776 words, ≈12.9 bits each).</p>
     </div>
@@ -68,8 +68,8 @@ function generator(el) {
       </div>
     </div>
     <div class="actions">
-      <button type="button" class="btn" id="g-copy">Copy</button>
-      <button type="button" class="btn primary" id="g-push">Share via secure link →</button>
+      <button type="button" class="btn" data-variant="outline" id="g-copy">Copy</button>
+      <button type="button" class="btn" id="g-push">Share via secure link →</button>
     </div>`;
   let mode = 'password';
   let current = '';
@@ -102,12 +102,11 @@ function generator(el) {
     $('#g-bar', el).dataset.level = bits < 40 ? 1 : bits < 64 ? 2 : bits < 90 ? 3 : 4;
     $('#g-info', el).textContent = current ? `≈ ${Math.round(bits)} bits of entropy · generated with your browser's cryptographic RNG` : '';
   };
-  $$('.seg button', el).forEach((b) => b.addEventListener('click', () => {
-    mode = b.dataset.mode;
-    $$('.seg button', el).forEach((x) => x.classList.toggle('on', x === b));
+  $('#g-mode', el).addEventListener('ui:change', (e) => {
+    mode = e.detail.value;
     $$('[data-pane]', el).forEach((p) => { p.hidden = p.dataset.pane !== mode; });
     gen();
-  }));
+  });
   el.addEventListener('input', (e) => {
     if (e.target.id === 'g-len') $('#g-len-v', el).textContent = e.target.value;
     if (e.target.id === 'g-words') $('#g-words-v', el).textContent = e.target.value;
@@ -221,14 +220,13 @@ export async function breachCount(pw) {
 function strength(el) {
   const LABELS = ['Very weak', 'Weak', 'Fair', 'Strong', 'Excellent'];
   el.innerHTML = `
-    <label class="field"><span>Password to analyse</span>
-      <div class="pw-wrap"><input type="password" id="s-pw" class="mono" autocomplete="off" spellcheck="false" placeholder="Type or paste a password">
-      <button type="button" class="btn ghost" id="s-show">Show</button></div></label>
+    <div class="field"><label for="s-pw">Password to analyse</label>
+      <div data-ui="toggle-password"><input type="password" data-ui-part="input" id="s-pw" class="mono" autocomplete="off" spellcheck="false" placeholder="Type or paste a password"><button type="button" data-ui-part="toggle" aria-label="Show or hide the password">${icon('eye')}</button></div></div>
     <div class="meter"><i id="s-bar"></i></div>
     <p class="verdict"><b id="s-label">—</b> <span id="s-bits" class="hint"></span></p>
     <div class="stat-grid" id="s-times"></div>
     <ul class="notes" id="s-notes"></ul>
-    <div class="actions"><button type="button" class="btn primary" id="s-hibp" disabled>Check against known data breaches</button></div>
+    <div class="actions"><button type="button" class="btn" id="s-hibp" disabled>Check against known data breaches</button></div>
     <p id="s-breach" class="callout" hidden></p>
     <p class="hint">Analysis happens on your device. The breach check uses the Have I Been Pwned <em>k‑anonymity</em> method: only the first 5 characters of a fingerprint (SHA‑1 hash) of the password are sent, relayed through our server. The password itself never leaves your device.</p>`;
   let words;
@@ -255,11 +253,6 @@ function strength(el) {
   };
   $('#s-pw', el).addEventListener('input', update);
   $('#s-pw', el).addEventListener('keydown', (e) => { if (e.key === 'Enter' && e.target.value) $('#s-hibp', el).click(); });
-  $('#s-show', el).addEventListener('click', (e) => {
-    const i = $('#s-pw', el);
-    i.type = i.type === 'password' ? 'text' : 'password';
-    e.target.textContent = i.type === 'password' ? 'Show' : 'Hide';
-  });
   $('#s-hibp', el).addEventListener('click', async () => {
     const pw = $('#s-pw', el).value;
     if (!pw || checking) return;
@@ -267,11 +260,11 @@ function strength(el) {
     const btn = $('#s-hibp', el);
     checking = true; shownFor = pw;
     btn.disabled = true; btn.textContent = 'Checking…';
-    out.hidden = false; out.className = 'callout'; out.textContent = 'Checking known breaches…';
+    setCallout(out, '', 'Checking known breaches…');
     let cls; let text;
     try {
       const n = await breachCount(pw);
-      cls = n ? 'bad' : 'good';
+      cls = n ? 'bad' : 'ok';
       text = n
         ? `⚠ This password appears ${n.toLocaleString()} time${n === 1 ? '' : 's'} in known data breaches. Do not use it anywhere.`
         : '✓ Not found in any known breach. (That alone does not make it strong.)';
@@ -283,7 +276,7 @@ function strength(el) {
     btn.textContent = 'Check against known data breaches';
     btn.disabled = !$('#s-pw', el).value;
     if ($('#s-pw', el).value !== pw) return; // the password changed while we were checking: don't show a stale answer
-    out.hidden = false; out.className = `callout ${cls}`; out.textContent = text;
+    setCallout(out, cls, text);
     out.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
   });
   update();
@@ -293,11 +286,11 @@ function strength(el) {
 const HASHES = ['SHA-1', 'SHA-256', 'SHA-384', 'SHA-512'];
 function hash(el) {
   el.innerHTML = `
-    <label class="field"><span>Text</span><textarea id="h-text" rows="4" class="mono" spellcheck="false" placeholder="Type text to hash…"></textarea></label>
-    <label class="field"><span>…or a file (never uploaded)</span><input type="file" id="h-file"></label>
-    <label class="field"><span>HMAC key <em>(optional — leave empty for a plain hash)</em></span><input type="text" id="h-key" class="mono" autocomplete="off" spellcheck="false"></label>
+    <div class="field"><label for="h-text">Text</label><textarea id="h-text" rows="4" class="mono" spellcheck="false" placeholder="Type text to hash…"></textarea></div>
+    <div class="field"><label for="h-file">…or a file (never uploaded)</label><input type="file" id="h-file"></div>
+    <div class="field"><label for="h-key">HMAC key <span class="muted">(optional — leave empty for a plain hash)</span></label><input type="text" id="h-key" class="mono" autocomplete="off" spellcheck="false"></div>
     <div id="h-out" class="kv"></div>
-    <label class="field"><span>Compare with expected checksum</span><input type="text" id="h-cmp" class="mono" autocomplete="off" spellcheck="false" placeholder="Paste a checksum to verify"></label>
+    <div class="field"><label for="h-cmp">Compare with expected checksum</label><input type="text" id="h-cmp" class="mono" autocomplete="off" spellcheck="false" placeholder="Paste a checksum to verify"></div>
     <p id="h-match" class="callout" hidden></p>`;
   let results = {};
   let seq = 0;
@@ -306,9 +299,7 @@ function hash(el) {
     const out = $('#h-match', el);
     if (!want) { out.hidden = true; return; }
     const hit = Object.entries(results).find(([, v]) => v === want);
-    out.hidden = false;
-    out.className = `callout ${hit ? 'good' : 'bad'}`;
-    out.textContent = hit ? `✓ Matches ${hit[0]}` : '✗ Does not match any of the digests above';
+    setCallout(out, hit ? 'ok' : 'bad', hit ? `✓ Matches ${hit[0]}` : '✗ Does not match any of the digests above');
   };
   const run = async () => {
     const my = ++seq;
@@ -327,7 +318,7 @@ function hash(el) {
     if (my !== seq) return;
     results = out;
     $('#h-out', el).innerHTML = Object.entries(out).map(([k, v]) =>
-      `<div><small>${k}</small><code class="mono">${v}</code><button type="button" class="btn ghost sm" data-copy="${v}">Copy</button></div>`).join('');
+      `<div><small>${k}</small><code class="mono">${v}</code><button type="button" class="btn" data-variant="ghost" data-size="s" data-copy="${v}">Copy</button></div>`).join('');
     compare();
   };
   el.addEventListener('input', (e) => (e.target.id === 'h-cmp' ? compare() : run()));
@@ -355,14 +346,14 @@ export async function decryptText(blob, pass) {
 }
 function cipher(el) {
   el.innerHTML = `
-    <label class="field"><span>Message or encrypted block</span><textarea id="c-in" rows="5" class="mono" spellcheck="false" placeholder="Plain text to encrypt, or a vd1.… block to decrypt"></textarea></label>
-    <label class="field"><span>Passphrase</span><input type="password" id="c-pass" autocomplete="off"></label>
+    <div class="field"><label for="c-in">Message or encrypted block</label><textarea id="c-in" rows="5" class="mono" spellcheck="false" placeholder="Plain text to encrypt, or a vd1.… block to decrypt"></textarea></div>
+    <div class="field"><label for="c-pass">Passphrase</label><div data-ui="toggle-password"><input type="password" data-ui-part="input" id="c-pass" autocomplete="off"><button type="button" data-ui-part="toggle" aria-label="Show or hide the passphrase">${icon('eye')}</button></div></div>
     <div class="actions">
-      <button type="button" class="btn primary" id="c-enc">Encrypt</button>
-      <button type="button" class="btn" id="c-dec">Decrypt</button>
+      <button type="button" class="btn" id="c-enc">Encrypt</button>
+      <button type="button" class="btn" data-variant="outline" id="c-dec">Decrypt</button>
     </div>
-    <label class="field"><span>Result</span><textarea id="c-out" rows="5" class="mono" readonly></textarea></label>
-    <div class="actions"><button type="button" class="btn" id="c-copy">Copy result</button></div>
+    <div class="field"><label for="c-out">Result</label><textarea id="c-out" rows="5" class="mono" readonly></textarea></div>
+    <div class="actions"><button type="button" class="btn" data-variant="outline" id="c-copy">Copy result</button></div>
     <p class="hint">AES‑256‑GCM with a key derived from your passphrase via PBKDF2‑SHA‑256 (600,000 iterations). Works offline — paste the block into an email or chat and share the passphrase another way.</p>`;
   const go = async (fn, label) => {
     const pass = $('#c-pass', el).value;
@@ -408,15 +399,15 @@ export async function totp(secretBytes, time = Date.now(), period = 30, digits =
 }
 function totpTool(el) {
   el.innerHTML = `
-    <label class="field"><span>2FA secret (base32)</span>
+    <div class="field"><label for="t-secret">2FA secret (base32)</label>
       <div class="pw-wrap"><input type="text" id="t-secret" class="mono" autocomplete="off" spellcheck="false" placeholder="e.g. JBSWY3DPEHPK3PXP">
-      <button type="button" class="btn ghost" id="t-new">New secret</button></div></label>
-    <label class="field"><span>Account label <em>(for the QR code)</em></span><input type="text" id="t-label" value="user@example.com" autocomplete="off"></label>
+      <button type="button" class="btn" data-variant="ghost" id="t-new">New secret</button></div></div>
+    <div class="field"><label for="t-label">Account label <span class="muted">(for the QR code)</span></label><input type="text" id="t-label" value="user@example.com" autocomplete="off"></div>
     <div class="totp">
       <div><output class="mono code" id="t-code">––– –––</output>
         <div class="meter thin"><i id="t-bar" data-level="4"></i></div>
         <p class="hint" id="t-left"></p>
-        <div class="actions"><button type="button" class="btn" id="t-copy">Copy code</button></div></div>
+        <div class="actions"><button type="button" class="btn" data-variant="outline" id="t-copy">Copy code</button></div></div>
       <canvas id="t-qr" class="qr" width="1" height="1" aria-label="QR code for authenticator apps"></canvas>
     </div>
     <p class="hint">Standard TOTP (RFC 6238, SHA‑1, 6 digits, 30 s) — compatible with Google Authenticator, Authy, 1Password and others. Use it to test a 2FA setup or generate a fresh secret. The secret stays in this tab.</p>`;
@@ -448,11 +439,11 @@ function totpTool(el) {
 // ------------------------------------------------------------------ JWT --
 function jwt(el) {
   el.innerHTML = `
-    <label class="field"><span>JSON Web Token</span><textarea id="j-in" rows="5" class="mono" spellcheck="false" placeholder="eyJhbGciOi…"></textarea></label>
+    <div class="field"><label for="j-in">JSON Web Token</label><textarea id="j-in" rows="5" class="mono" spellcheck="false" placeholder="eyJhbGciOi…"></textarea></div>
     <div id="j-warn"></div>
     <div class="cols"><div><h4>Header</h4><pre class="mono box" id="j-head"></pre></div><div><h4>Payload</h4><pre class="mono box" id="j-body"></pre></div></div>
     <div id="j-claims" class="kv"></div>
-    <label class="field"><span>Verify HMAC signature <em>(HS256/384/512 — secret stays local)</em></span><input type="text" id="j-secret" class="mono" autocomplete="off" spellcheck="false" placeholder="Shared secret"></label>
+    <div class="field"><label for="j-secret">Verify HMAC signature <span class="muted">(HS256/384/512 — secret stays local)</span></label><input type="text" id="j-secret" class="mono" autocomplete="off" spellcheck="false" placeholder="Shared secret"></div>
     <p id="j-sig" class="callout" hidden></p>
     <p class="hint">Decoded locally — the token is never sent anywhere. Remember: a JWT payload is only encoded, not encrypted.</p>`;
   const run = async () => {
@@ -466,14 +457,14 @@ function jwt(el) {
     try {
       if (parts.length !== 3) throw new Error('A JWT has three dot‑separated parts');
       head = JSON.parse(fromUtf8(fromB64u(parts[0]))); body = JSON.parse(fromUtf8(fromB64u(parts[1])));
-    } catch (e) { $('#j-warn', el).innerHTML = `<p class="callout bad">Not a valid JWT: ${esc(e.message)}</p>`; return; }
+    } catch (e) { $('#j-warn', el).innerHTML = `<p class="callout" data-tone="bad">Not a valid JWT: ${esc(e.message)}</p>`; return; }
     $('#j-head', el).textContent = JSON.stringify(head, null, 2);
     $('#j-body', el).textContent = JSON.stringify(body, null, 2);
     if (String(head.alg).toLowerCase() === 'none') warn.push('alg is "none" — this token is unsigned and must never be trusted.');
     if (typeof body.exp === 'number' && body.exp * 1000 < Date.now()) warn.push(`Token expired ${fmtRelative(body.exp * 1000)}.`);
     if (typeof body.nbf === 'number' && body.nbf * 1000 > Date.now()) warn.push('Token is not valid yet (nbf is in the future).');
     if (body.exp === undefined) warn.push('No exp claim — this token never expires.');
-    $('#j-warn', el).innerHTML = warn.map((w) => `<p class="callout bad">⚠ ${esc(w)}</p>`).join('');
+    $('#j-warn', el).innerHTML = warn.map((w) => `<p class="callout" data-tone="bad">⚠ ${esc(w)}</p>`).join('');
     $('#j-claims', el).innerHTML = [['iat', 'Issued'], ['nbf', 'Not before'], ['exp', 'Expires']]
       .filter(([k]) => typeof body[k] === 'number')
       .map(([k, l]) => `<div><small>${l} (${k})</small><code>${esc(fmtDate(body[k] * 1000))} · ${esc(fmtRelative(body[k] * 1000))}</code></div>`).join('');
@@ -481,13 +472,12 @@ function jwt(el) {
     const alg = { HS256: 'SHA-256', HS384: 'SHA-384', HS512: 'SHA-512' }[head.alg];
     if (!secret) return;
     sig.hidden = false;
-    if (!alg) { sig.className = 'callout'; sig.textContent = `Signature check supports HS256/384/512 only (this token uses ${head.alg}).`; return; }
+    if (!alg) { setCallout(sig, '', `Signature check supports HS256/384/512 only (this token uses ${head.alg}).`); return; }
     try {
       const key = await crypto.subtle.importKey('raw', utf8(secret), { name: 'HMAC', hash: alg }, false, ['verify']);
       const ok = await crypto.subtle.verify('HMAC', key, fromB64u(parts[2]), utf8(`${parts[0]}.${parts[1]}`));
-      sig.className = `callout ${ok ? 'good' : 'bad'}`;
-      sig.textContent = ok ? '✓ Signature is valid for this secret' : '✗ Signature does not match this secret';
-    } catch { sig.className = 'callout bad'; sig.textContent = '✗ Signature is malformed'; }
+      setCallout(sig, ok ? 'ok' : 'bad', ok ? '✓ Signature is valid for this secret' : '✗ Signature does not match this secret');
+    } catch { setCallout(sig, 'bad', '✗ Signature is malformed'); }
   };
   el.addEventListener('input', run);
 }
@@ -498,10 +488,10 @@ function encoder(el) {
     <div class="checks"><label>Format <select id="e-fmt">
       <option value="b64">Base64</option><option value="b64u">Base64URL</option><option value="hex">Hex</option><option value="url">URL (percent)</option>
     </select></label></div>
-    <label class="field"><span>Input</span><textarea id="e-in" rows="5" class="mono" spellcheck="false"></textarea></label>
-    <div class="actions"><button type="button" class="btn primary" id="e-enc">Encode ↓</button><button type="button" class="btn" id="e-dec">Decode ↓</button></div>
-    <label class="field"><span>Output</span><textarea id="e-out" rows="5" class="mono" readonly></textarea></label>
-    <div class="actions"><button type="button" class="btn" id="e-copy">Copy output</button></div>`;
+    <div class="field"><label for="e-in">Input</label><textarea id="e-in" rows="5" class="mono" spellcheck="false"></textarea></div>
+    <div class="actions"><button type="button" class="btn" id="e-enc">Encode ↓</button><button type="button" class="btn" data-variant="outline" id="e-dec">Decode ↓</button></div>
+    <div class="field"><label for="e-out">Output</label><textarea id="e-out" rows="5" class="mono" readonly></textarea></div>
+    <div class="actions"><button type="button" class="btn" data-variant="outline" id="e-copy">Copy output</button></div>`;
   const strict = new TextDecoder('utf-8', { fatal: true });
   const enc = { b64: (s) => toB64(utf8(s)), b64u: (s) => toB64u(utf8(s)), hex: (s) => toHex(utf8(s)), url: encodeURIComponent };
   const dec = {

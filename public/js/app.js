@@ -1,8 +1,10 @@
-import { $, $$, esc, toast, copyText, drawQr, fmtDate, fmtRelative, fmtBytes, icon } from './ui.js';
+import { $, $$, esc, toast, copyText, drawQr, fmtDate, fmtRelative, fmtBytes, icon, refreshUi, tip } from './ui.js';
 import { seal, unlock, open, utf8, fromUtf8 } from './crypto.js';
 import { mountTools, generatePassword } from './tools.js';
 
 const app = $('#app');
+// Pages render by replacing #app's HTML. Colibri UI wires up whatever appears.
+new MutationObserver(() => refreshUi(app)).observe(app, { childList: true });
 let cleanup = () => {};
 let prefill = '';
 let agentPreset = false;
@@ -54,22 +56,10 @@ $('#tabs').innerHTML = [
   ['/', 'push', 'send', 'Share'], ['/agents', 'agents', 'bot', 'AI agents'], ['/tools', 'tools', 'tools', 'Toolkit'],
   ['/pushes', 'pushes', 'folder', 'My secrets'], ['/security', 'security', 'shield', 'Security'], ['/faq', 'faq', 'list', 'FAQ'],
 ].map(([href, nav, ic, label]) => `<a href="${href}" data-link data-nav="${nav}">${icon(ic)}<span>${label}</span></a>`).join('');
-const themeBtn = $('#theme-toggle');
-themeBtn.innerHTML = icon('moon');
-themeBtn.addEventListener('click', () => {
-  const root = document.documentElement;
-  const dark = root.dataset.theme ? root.dataset.theme === 'dark' : matchMedia('(prefers-color-scheme: dark)').matches;
-  root.dataset.theme = dark ? 'light' : 'dark';
-  try { localStorage.setItem('vd-theme', root.dataset.theme); } catch { /* ignore */ }
-});
 let installEvent;
 window.addEventListener('beforeinstallprompt', (e) => { e.preventDefault(); installEvent = e; $('#install').hidden = false; });
 $('#install').addEventListener('click', async () => { if (installEvent) { installEvent.prompt(); await installEvent.userChoice; installEvent = null; $('#install').hidden = true; } });
 window.addEventListener('appinstalled', () => { $('#install').hidden = true; });
-const network = $('#network');
-$('#network-open').addEventListener('click', () => network.showModal());
-$('#network-close').addEventListener('click', () => network.close());
-network.addEventListener('click', (e) => { if (e.target === network) network.close(); }); // click on the backdrop
 const syncOnline = () => { $('#offline').hidden = navigator.onLine; };
 window.addEventListener('online', syncOnline); window.addEventListener('offline', syncOnline); syncOnline();
 if ('serviceWorker' in navigator) navigator.serviceWorker.register('/sw.js').catch(() => {});
@@ -86,7 +76,8 @@ function render() {
   else if (path === '/security') { nav = 'security'; pageSecurity(); }
   else if (path === '/agents') { nav = 'agents'; pageAgents(); }
   else if (path === '/faq') { nav = 'faq'; pageFaq(); }
-  else app.innerHTML = notice('link', 'Page not found', 'That address does not exist.', '<a class="btn primary" href="/" data-link>Share a secret</a>');
+  else app.innerHTML = notice('link', 'Page not found', 'That address does not exist.', '<a class="btn" href="/" data-link>Share a secret</a>');
+  refreshUi(app);
   $$('#tabs [data-nav]').forEach((a) => {
     a.classList.toggle('on', a.dataset.nav === nav);
     if (a.dataset.nav === nav) a.setAttribute('aria-current', 'page'); else a.removeAttribute('aria-current');
@@ -94,7 +85,7 @@ function render() {
   window.scrollTo(0, 0);
 }
 const notice = (ic, title, text, extra = '', muted = true) =>
-  `<section class="card notice"><div class="badge ${muted ? 'muted' : ''}">${icon(ic)}</div><h1>${title}</h1><p>${text}</p>${extra ? `<div class="actions">${extra}</div>` : ''}</section>`;
+  `<section class="card notice"><div class="badge-ico ${muted ? 'muted' : ''}">${icon(ic)}</div><h1>${title}</h1><p>${text}</p>${extra ? `<div class="actions">${extra}</div>` : ''}</section>`;
 const plural = (n, w) => `${n} ${w}${n === 1 ? '' : 's'}`;
 const SUBMIT_LABEL = `${icon('lock')} Encrypt &amp; create secure link`;
 
@@ -109,13 +100,13 @@ async function pagePush() {
       <p class="lede">Turn any secret into a link that works once and then destroys itself. The recommended way to hand credentials to a colleague — or to an AI agent that won't take them in chat.</p>
     </section>
     <form class="card glow narrow" id="push-form" autocomplete="off">
-      <div class="seg full" role="tablist" id="kind-seg">
-        <button type="button" class="on" data-kind="text">${icon('key')} Password or text</button>
-        <button type="button" data-kind="file">${icon('file')} File</button>
+      <div data-ui="segmented-control" data-default-value="text" id="kind-seg" class="full" aria-label="What to share">
+        <button type="button" data-ui-part="item" data-value="text" data-kind="text">${icon('key')} Password or text</button>
+        <button type="button" data-ui-part="item" data-value="file" data-kind="file">${icon('file')} File</button>
       </div>
       <div data-pane="text">
-        <label class="field"><span>Secret</span>
-          <textarea id="secret" rows="4" class="mono" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Paste a password, API key, recovery code, note…"></textarea></label>
+        <div class="field"><label for="secret">Secret</label>
+          <textarea id="secret" rows="4" class="mono" spellcheck="false" autocapitalize="off" autocorrect="off" placeholder="Paste a password, API key, recovery code, note…"></textarea></div>
         <div class="under"><button type="button" class="link-btn" id="gen">${icon('dice')} Generate a strong password</button><span class="hint" id="count"></span></div>
       </div>
       <div data-pane="file" hidden>
@@ -123,9 +114,9 @@ async function pagePush() {
           <span id="drop-label"><b>Choose a file</b> or drop it here<br><small>Up to ${fmtBytes(config.maxFileBytes)} · encrypted before upload, including its name</small></span></label>
       </div>
       <p class="row-label">Who is it for?</p>
-      <div class="seg full" id="who-seg">
-        <button type="button" data-who="person">${icon('send')} A person</button>
-        <button type="button" data-who="agent">${icon('bot')} An AI agent</button>
+      <div data-ui="segmented-control" data-default-value="${forAgent ? 'agent' : 'person'}" id="who-seg" class="full" aria-label="Who is it for">
+        <button type="button" data-ui-part="item" data-value="person" data-who="person">${icon('send')} A person</button>
+        <button type="button" data-ui-part="item" data-value="agent" data-who="agent">${icon('bot')} An AI agent</button>
       </div>
       <p class="hint" id="who-hint"></p>
       <div class="sliders">
@@ -133,12 +124,12 @@ async function pagePush() {
         <label class="range"><span>…or after <b id="views-v"></b></span><input type="range" id="views" min="1" max="${config.maxViews}" value="5"></label>
       </div>
       <p class="hint">Whichever comes first. Then the encrypted data is erased for good.</p>
-      <label class="field"><span>Extra passphrase <em>(optional — share it through a different channel)</em></span>
-        <input type="password" id="pass" autocomplete="new-password" placeholder="Required to open the link"></label>
-      <label class="field"><span>Private label <em>(optional — stays on this device only)</em></span>
-        <input type="text" id="label" maxlength="60" placeholder="e.g. Deploy key for the staging agent"></label>
-      <label class="check"><input type="checkbox" id="deletable" checked> Let the recipient destroy the secret after reading it</label>
-      <button class="btn primary wide" id="submit">${SUBMIT_LABEL}</button>
+      <div class="field"><label for="pass">Extra passphrase <span class="muted">(optional — share it through a different channel)</span></label>
+        <div data-ui="toggle-password"><input type="password" data-ui-part="input" id="pass" autocomplete="new-password" placeholder="Required to open the link"><button type="button" data-ui-part="toggle" aria-label="Show or hide the passphrase">${icon('eye')}</button></div></div>
+      <div class="field"><label for="label">Private label <span class="muted">(optional — stays on this device only)</span></label>
+        <input type="text" id="label" maxlength="60" placeholder="e.g. Deploy key for the staging agent"></div>
+      <label class="check"><input type="checkbox" data-ui="switch" id="deletable" checked> Let the recipient destroy the secret after reading it</label>
+      <button class="btn wide" data-size="l" id="submit">${SUBMIT_LABEL}</button>
       <p class="error" id="err" role="alert" hidden></p>
     </form>
 
@@ -148,15 +139,15 @@ async function pagePush() {
       <div class="feature">${icon('list')}<b>You stay in control</b>See when the link was opened, and destroy it early at any time.</div>
     </div>
     <section class="card narrow banner">
-      <div class="badge">${icon('bot')}</div>
+      <div class="badge-ico">${icon('bot')}</div>
       <div><h2>Your AI agent refused to take a password?</h2>
         <p>Good — chat transcripts are stored and replayed. Give it a one‑time VaultDrop link instead.</p></div>
-      <a class="btn" href="/agents" data-link>See how it works</a>
+      <a class="btn" data-variant="outline" href="/agents" data-link>See how it works</a>
     </section>
     <section class="card narrow">
       <h2>Do you store my password?</h2>
       <p><b>No.</b> Your password is scrambled on your own device before anything is sent. We receive only the scrambled version, we never receive the key that unscrambles it, and that scrambled copy is deleted as soon as the link expires.</p>
-      <div class="actions"><a class="btn" href="/faq" data-link>More questions &amp; answers</a><a class="btn ghost" href="/security" data-link>How the encryption works</a></div>
+      <div class="actions"><a class="btn" data-variant="outline" href="/faq" data-link>More questions &amp; answers</a><a class="btn" data-variant="ghost" href="/security" data-link>How the encryption works</a></div>
     </section>`;
   const form = $('#push-form');
   let kind = 'text';
@@ -170,7 +161,6 @@ async function pagePush() {
   };
   const setWho = (w) => {
     who = w;
-    $$('#who-seg button').forEach((x) => x.classList.toggle('on', x.dataset.who === w));
     $('#days').value = w === 'agent' ? 1 : Math.min(7, config.maxDays);
     $('#views').value = w === 'agent' ? 1 : Math.min(5, config.maxViews);
     $('#who-hint').textContent = w === 'agent'
@@ -180,12 +170,11 @@ async function pagePush() {
   };
   form.addEventListener('input', sync);
   setWho(forAgent ? 'agent' : 'person');
-  $$('#who-seg button').forEach((b) => b.addEventListener('click', () => setWho(b.dataset.who)));
-  $$('#kind-seg button').forEach((b) => b.addEventListener('click', () => {
-    kind = b.dataset.kind;
-    $$('#kind-seg button').forEach((x) => x.classList.toggle('on', x === b));
+  $('#who-seg').addEventListener('ui:change', (e) => setWho(e.detail.value));
+  $('#kind-seg').addEventListener('ui:change', (e) => {
+    kind = e.detail.value;
     $$('[data-pane]', form).forEach((p) => { p.hidden = p.dataset.pane !== kind; });
-  }));
+  });
   $('#gen').addEventListener('click', () => {
     secret.value = generatePassword(20, { lower: true, upper: true, digits: true, symbols: true }).value;
     sync();
@@ -264,8 +253,8 @@ function showCreated(c) {
       <h1>Your secure link is ready</h1>
       <p>It works for <b>${plural(views, 'view')}</b> or until <b>${esc(fmtDate(expiresAt))}</b> (${plural(days, 'day')}), whichever comes first.</p>
       <div class="linkbox"><input type="text" class="mono" id="link" readonly aria-label="Secret link">
-        <button class="btn primary" id="copy" type="button">Copy link</button>
-        <button class="btn" id="share" type="button" hidden>${icon('share')} Share</button></div>
+        <button class="btn" id="copy" type="button">Copy link</button>
+        <button class="btn" data-variant="outline" id="share" type="button" hidden>${icon('share')} Share</button></div>
       <div class="created-grid">
         <canvas class="qr" id="qr" width="1" height="1" aria-label="QR code of the secret link"></canvas>
         <ul class="notes plain">
@@ -274,18 +263,20 @@ function showCreated(c) {
           <li>Opening the link shows a confirmation step first, so link previews and scanners don\'t use up views.</li>
         </ul>
       </div>
-      <details class="handoff"${c.agent ? ' open' : ''}>
-        <summary>${icon('bot')} Giving this to an AI agent?</summary>
-        <div>
+      <div data-ui="accordion" data-type="multiple" class="handoff"${c.agent ? ' data-default-value="agent"' : ''}>
+        <div data-ui-part="item" data-value="agent">
+        <h2><button type="button" data-ui-part="trigger">${icon('bot')} Giving this to an AI agent?</button></h2>
+        <div data-ui-part="content">
           <p class="hint">Paste this message into the chat instead of the password. The agent downloads and decrypts the secret inside its own workspace; once it has, the link left in the transcript is dead.</p>
           <pre class="snippet" id="agent-msg"></pre>
-          <div class="actions"><button class="btn primary" id="copy-agent" type="button">Copy message for the agent</button>
-            <a class="btn ghost" href="/agents" data-link>Why this is safer</a></div>
+          <div class="actions"><button class="btn" id="copy-agent" type="button">Copy message for the agent</button>
+            <a class="btn" data-variant="ghost" href="/agents" data-link>Why this is safer</a></div>
         </div>
-      </details>
+        </div>
+      </div>
       <div class="actions">
-        <a class="btn" href="/p/${id}/admin#${token}" data-link>${icon('list')} Audit log &amp; manage</a>
-        <a class="btn ghost" href="/" data-link>Share another secret</a>
+        <a class="btn" data-variant="outline" href="/p/${id}/admin#${token}" data-link>${icon('list')} Audit log &amp; manage</a>
+        <a class="btn" data-variant="ghost" href="/" data-link>Share another secret</a>
       </div>
     </section>`;
   $('#link').value = link;
@@ -313,12 +304,12 @@ async function pageView(id) {
   try { meta = await api(`/pushes/${id}`); }
   catch (e) {
     app.innerHTML = notice('x', 'Nothing here', esc(e.status === 404 ? 'This secret does not exist, or it expired and was permanently erased.' : e.message),
-      '<a class="btn primary" href="/" data-link>Share a secret of your own</a>');
+      '<a class="btn" href="/" data-link>Share a secret of your own</a>');
     return;
   }
   if (meta.status === 'expired') {
     app.innerHTML = notice('timer', 'This secret is gone', `${GONE[meta.endedWhy] || 'It expired.'} The encrypted data was erased from our server. We never had the key, so nobody — including us — could ever read it.`,
-      '<a class="btn primary" href="/" data-link>Share a secret of your own</a>');
+      '<a class="btn" href="/" data-link>Share a secret of your own</a>');
     return;
   }
   if (!/^[\w-]{43}$/.test(linkKey)) {
@@ -328,12 +319,12 @@ async function pageView(id) {
   const what = meta.kind === 'file' ? 'file' : 'secret';
   app.innerHTML = `
     <section class="card glow reveal">
-      <div class="badge">${icon('lock')}</div>
+      <div class="badge-ico">${icon('lock')}</div>
       <h1>Someone shared a ${what} with you</h1>
       <p>It can be opened <b>${meta.viewsLeft} more time${meta.viewsLeft === 1 ? '' : 's'}</b> and expires <b>${esc(fmtRelative(meta.expiresAt))}</b>. Opening it now uses one view.</p>
       <form id="open-form" autocomplete="off">
-        ${meta.passphrase ? '<label class="field"><span>Passphrase from the sender</span><input type="password" id="pass" autocomplete="off" required autofocus></label>' : ''}
-        <button class="btn primary wide" id="open-btn">${icon('eye')} Reveal ${what}</button>
+        ${meta.passphrase ? `<div class="field"><label for="pass">Passphrase from the sender</label><div data-ui="toggle-password"><input type="password" data-ui-part="input" id="pass" autocomplete="off" required autofocus><button type="button" data-ui-part="toggle" aria-label="Show or hide the passphrase">${icon('eye')}</button></div></div>` : ''}
+        <button class="btn wide" data-size="l" id="open-btn">${icon('eye')} Reveal ${what}</button>
         <p class="error" id="err" role="alert" hidden></p>
       </form>
       <p class="hint">Decryption happens on your device. Make sure nobody is looking over your shoulder.</p>
@@ -363,13 +354,13 @@ function showSecret(id, auth, header, data, res) {
       <p class="eyebrow">Decrypted on your device</p>
       <h1>${isFile ? 'Your file is ready' : 'Here is the secret'}</h1>
       ${isFile
-    ? `<div class="filebox">${icon('file')}<div><b id="fname"></b><small>${fmtBytes(data.length)}</small></div><a class="btn primary" id="dl">${icon('download')} Download</a></div>`
+    ? `<div class="filebox">${icon('file')}<div><b id="fname"></b><small>${fmtBytes(data.length)}</small></div><a class="btn" id="dl">${icon('download')} Download</a></div>`
     : `<div class="secret-wrap"><pre class="mono secret blurred" id="secret" tabindex="0"></pre></div>
-       <div class="actions"><button class="btn primary" id="copy" type="button">Copy to clipboard</button><button class="btn" id="toggle" type="button">Show</button></div>`}
-      <p class="callout ${left ? '' : 'good'}" id="status">${left
+       <div class="actions"><button class="btn" id="copy" type="button">Copy to clipboard</button><button class="btn" data-variant="outline" id="toggle" type="button">Show</button></div>`}
+      <p class="callout"${left ? '' : ' data-tone="ok"'} id="status">${left
     ? `This link can be opened ${left} more time${left === 1 ? '' : 's'}.`
     : 'That was the last view. The encrypted data has been permanently erased from our server.'}</p>
-      ${left && res.deletable ? `<div class="actions"><button class="btn danger" id="burn" type="button">${icon('trash')} Destroy this secret now</button></div><p class="hint">Got what you need? Destroying it means the link can never be opened again.</p>` : ''}
+      ${left && res.deletable ? `<div class="actions"><button class="btn" data-variant="danger" id="burn" type="button">${icon('trash')} Destroy this secret now</button></div><p class="hint">Got what you need? Destroying it means the link can never be opened again.</p>` : ''}
     </section>`;
   if (isFile) {
     $('#fname').textContent = header.name;
@@ -390,7 +381,7 @@ function showSecret(id, auth, header, data, res) {
     try {
       await api(`/pushes/${id}`, { method: 'DELETE', body: { auth } });
       burn.closest('.actions').nextElementSibling.remove(); burn.closest('.actions').remove();
-      const s = $('#status'); s.className = 'callout good'; s.textContent = 'Destroyed. The encrypted data has been permanently erased from our server.';
+      const s = $('#status'); s.dataset.tone = 'ok'; s.textContent = 'Destroyed. The encrypted data has been permanently erased from our server.';
     } catch (ex) { burn.disabled = false; toast(ex.message, 'bad'); }
   });
 }
@@ -402,8 +393,8 @@ const EVENTS = {
 };
 function statusPill(m) {
   return m.status === 'active'
-    ? `<span class="pill good">Active · ${m.viewsLeft}/${m.viewsMax} views left</span>`
-    : `<span class="pill">Erased · ${esc((GONE[m.endedWhy] || 'Expired.').replace(/\.$/, ''))}</span>`;
+    ? `<span class="badge" data-tone="ok">Active · ${m.viewsLeft}/${m.viewsMax} views left</span>`
+    : `<span class="badge">Erased · ${esc((GONE[m.endedWhy] || 'Expired.').replace(/\.$/, ''))}</span>`;
 }
 async function pageAdmin(id) {
   const token = location.hash.slice(1) || (store.all().find((p) => p.id === id) || {}).token;
@@ -414,7 +405,7 @@ async function pageAdmin(id) {
     m = await api(`/pushes/${id}/audit`, { headers: { 'X-Admin-Token': token } });
   } catch (e) {
     app.innerHTML = notice('alert', 'Audit log unavailable', esc(e.status === 404 ? 'This secret no longer exists. Records are removed some time after a secret is erased.' : e.message),
-      '<a class="btn" href="/pushes" data-link>My secrets</a>');
+      '<a class="btn" data-variant="outline" href="/pushes" data-link>My secrets</a>');
     return;
   }
   const local = store.all().find((p) => p.id === id);
@@ -427,7 +418,7 @@ async function pageAdmin(id) {
         <div class="stat"><small>${m.status === 'active' ? 'Expires' : 'Erased'}</small><b>${esc(fmtDate(m.status === 'active' ? m.expiresAt : m.endedAt))}</b></div>
         <div class="stat"><small>Protection</small><b>${m.passphrase ? 'Link key + passphrase' : 'Link key'}</b></div>
       </div>
-      ${m.status === 'active' ? `<div class="actions"><button class="btn danger" id="burn" type="button">${icon('trash')} Destroy this secret now</button></div>` : ''}
+      ${m.status === 'active' ? `<div class="actions"><button class="btn" data-variant="danger" id="burn" type="button">${icon('trash')} Destroy this secret now</button></div>` : ''}
       <h2>Audit log</h2>
       <div class="table-wrap"><table><thead><tr><th>Event</th><th>When</th><th>IP address</th><th>Browser / client</th></tr></thead><tbody>
         ${m.events.map((ev) => { const [ic, label] = EVENTS[ev.event] || ['list', ev.event]; return `<tr><td>${icon(ic)} ${esc(label)}</td><td>${esc(fmtDate(ev.ts))}</td><td class="mono">${esc(ev.ip || '—')}</td><td class="ua">${esc(ev.ua || '—')}</td></tr>`; }).join('')}
@@ -446,7 +437,7 @@ async function pageMine() {
   const list = store.all();
   if (!list.length) {
     app.innerHTML = notice('folder', 'No secrets yet', 'Secrets you create on this device appear here so you can check whether they were opened, or destroy them early.',
-      '<a class="btn primary" href="/" data-link>Share your first secret</a>');
+      '<a class="btn" href="/" data-link>Share your first secret</a>');
     return;
   }
   app.innerHTML = `
@@ -456,8 +447,8 @@ async function pageMine() {
       <li data-id="${esc(p.id)}"><span class="ico">${icon(p.kind === 'file' ? 'file' : 'key')}</span>
         <div><b>${esc(p.label || (p.kind === 'file' ? 'File' : 'Secret'))}</b><small>Created ${esc(fmtRelative(p.createdAt))} · <span class="mono">${esc(p.id)}</span></small></div>
         <span class="st hint">Checking…</span>
-        <a class="btn sm" href="/p/${esc(p.id)}/admin" data-link>Audit log</a>
-        <button class="btn ghost sm" data-forget type="button" title="Remove from this list" aria-label="Remove from this list">${icon('x')}</button></li>`).join('')}</ul></section>`;
+        <a class="btn" data-variant="outline" data-size="s" href="/p/${esc(p.id)}/admin" data-link>Audit log</a>
+        ${tip(`<button class="btn" data-variant="ghost" data-size="s" data-forget data-ui-part="trigger" type="button" aria-label="Remove from this list">${icon('x')}</button>`, 'Remove from this list (does not destroy the secret)')}</li>`).join('')}</ul></section>`;
   app.addEventListener('click', function onClick(e) {
     const b = e.target.closest('[data-forget]');
     if (!b) return;
@@ -469,7 +460,7 @@ async function pageMine() {
     const st = $(`.mine li[data-id="${p.id}"] .st`);
     api(`/pushes/${p.id}/audit`, { headers: { 'X-Admin-Token': p.token } })
       .then((m) => { if (st.isConnected) st.outerHTML = statusPill(m); })
-      .catch((e) => { if (st.isConnected) st.outerHTML = `<span class="pill">${e.status ? 'Erased · record removed' : 'Offline'}</span>`; });
+      .catch((e) => { if (st.isConnected) st.outerHTML = `<span class="badge">${e.status ? 'Erased · record removed' : 'Offline'}</span>`; });
   }
 }
 
@@ -481,7 +472,7 @@ function pageAgents() {
       <p class="eyebrow">For AI agents</p>
       <h1>The right way to give a password <span class="grad">to an AI agent.</span></h1>
       <p class="lede">Careful AI agents decline passwords pasted into chat — and they're right to. VaultDrop is the recommended alternative: hand over a one‑time encrypted link, and the secret never enters the conversation.</p>
-      <div class="actions"><a class="btn primary" href="/" data-link data-agent>${icon('bot')} Create a link for an agent</a></div>
+      <div class="actions"><a class="btn" href="/" data-link data-agent>${icon('bot')} Create a link for an agent</a></div>
     </section>
 
     <section class="card prose narrow">
@@ -522,7 +513,7 @@ node vd-get.mjs '${esc(o)}/p/…#…' --out .secret</pre></li>
         <li><b>Check the audit log.</b> Exactly one “revealed” event, at the time you expect, from the agent's environment.</li>
         <li><b>Rotate or revoke when the task is done.</b> Once retrieved, the secret lives in the agent's workspace; VaultDrop protects the hand‑off, not what happens afterwards.</li>
       </ul>
-      <div class="actions"><a class="btn primary" href="/" data-link data-agent>${icon('bot')} Create a link for an agent</a><a class="btn" href="/security" data-link>How the encryption works</a></div>
+      <div class="actions"><a class="btn" href="/" data-link data-agent>${icon('bot')} Create a link for an agent</a><a class="btn" data-variant="outline" href="/security" data-link>How the encryption works</a></div>
     </section>`;
 }
 
@@ -582,12 +573,14 @@ function pageFaq() {
     </section>
     ${FAQ.map(([group, items], g) => `
       <section class="card narrow faq"><h2>${group}</h2>
-        ${items.map(([q, a], i) => `<details${g === 0 && i === 0 ? ' open' : ''}><summary>${q}</summary><div class="prose">${a}</div></details>`).join('')}
+        <div data-ui="accordion" data-type="multiple"${g === 0 ? ' data-default-value="q0-0"' : ''}>
+        ${items.map(([q, a], i) => `<div data-ui-part="item" data-value="q${g}-${i}"><h3><button type="button" data-ui-part="trigger">${q}</button></h3><div data-ui-part="content" class="prose">${a}</div></div>`).join('')}
+        </div>
       </section>`).join('')}
-    <section class="card narrow center">
+    <section class="card narrow tc">
       <h2>Still unsure?</h2>
       <p>The full technical explanation, including what we cannot promise, is on the Security page.</p>
-      <div class="actions"><a class="btn primary" href="/" data-link>Share a secret</a><a class="btn" href="/security" data-link>Security details</a></div>
+      <div class="actions"><a class="btn" href="/" data-link>Share a secret</a><a class="btn" data-variant="outline" href="/security" data-link>Security details</a></div>
     </section>`;
 }
 
@@ -656,7 +649,7 @@ function pageSecurity() {
         <li><b>Encryption runs in code served by this site.</b> As with any web app, you are trusting that this site serves honest code over HTTPS. VaultDrop is <a href="https://github.com/levancho/security-toolkit" target="_blank" rel="noopener">open source on GitHub</a> and self‑hostable, so you or your organisation can inspect it and run your own copy.</li>
         <li><b>Rotate when you can.</b> A shared password is best treated as temporary: ask the recipient to change it after first use.</li>
       </ul>
-      <div class="actions"><a class="btn primary" href="/" data-link>Share a secret securely</a><a class="btn" href="/agents" data-link>${icon('bot')} Using it with AI agents</a></div>
+      <div class="actions"><a class="btn" href="/" data-link>Share a secret securely</a><a class="btn" data-variant="outline" href="/agents" data-link>${icon('bot')} Using it with AI agents</a></div>
     </section>`;
 }
 

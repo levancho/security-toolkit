@@ -5,13 +5,27 @@ export const $$ = (sel, root = document) => Array.from(root.querySelectorAll(sel
 const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
 export const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ESC[c]);
 
-let toastTimer;
+import { toast as kitToast } from '/colibri/core/base.js';
+
+/** Colibri toast. kind: 'ok' | 'bad'. */
 export function toast(msg, kind = 'ok') {
-  const t = $('#toast');
-  t.textContent = msg;
-  t.className = `show ${kind}`;
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => { t.className = ''; }, 2600);
+  kitToast({ title: msg, variant: kind === 'bad' ? 'error' : 'success', duration: kind === 'bad' ? 5000 : 2600 });
+}
+
+/** Tell Colibri UI to wire up components inside freshly rendered HTML. */
+export function refreshUi(scope = document) {
+  scope.dispatchEvent(new Event('ui:refresh', { bubbles: true }));
+}
+
+/** Colibri tooltip around a trigger element's HTML (the trigger must carry data-ui-part="trigger"). */
+export const tip = (triggerHtml, text, side = '') =>
+  `<span data-ui="tooltip"${side ? ` data-side="${side}"` : ''}>${triggerHtml}<span data-ui-part="content" role="tooltip">${text}</span></span>`;
+
+/** Show a Colibri callout with a tone: '' (neutral) | 'ok' | 'bad' | 'warn'. */
+export function setCallout(el, tone, text) {
+  el.hidden = false;
+  if (tone) el.dataset.tone = tone; else delete el.dataset.tone;
+  el.textContent = text;
 }
 
 export async function copyText(text, what = 'Copied') {
